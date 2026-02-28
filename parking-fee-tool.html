@@ -20,18 +20,17 @@
       .price{font-size:clamp(1.85rem,3.2vw,2.45rem);font-weight:900;color:#1a4ea9;margin:5px 0}.muted{color:var(--muted);line-height:1.65}
       details{border:1px dashed #bfd2f7;border-radius:12px;background:#f8fbff;padding:10px} summary{cursor:pointer;font-weight:800;color:#35558f}
       .sheet-date{font-size:1.35rem;font-weight:900;color:#23457d;margin-bottom:6px}
-      .sheet-meta{margin:8px 0;border:1px solid #d9e6ff;background:#f7fbff;border-radius:10px;padding:10px 12px;color:#3b5685}
+      .sheet-meta{display:none}
       .sheet-wrap{overflow-x:auto;border:2px solid #c4d6f6;border-radius:10px}
       table.sheet{width:max-content;min-width:100%;border-collapse:collapse}
       table.sheet th,table.sheet td{border:1px solid #cfdcf6;padding:7px 8px;text-align:center;white-space:nowrap}
       table.sheet th{background:#eef4ff;color:#4c6793}
       .branch{background:#fff5c4 !important;color:#7a4b00;font-weight:800}
-      .after-branch{background:#e8fff4}
       .label-cell{background:#f4f8ff;font-weight:800;position:sticky;left:0;z-index:1}
       dialog{width:min(980px,calc(100% - 18px));border:1px solid #d9e4f8;border-radius:14px;padding:0} dialog::backdrop{background:rgba(8,16,35,.45)}
       .modal-head{padding:12px 14px;border-bottom:1px solid #e3ebf8;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:12px 14px 16px;max-height:76vh;overflow:auto}
       .rate-box{border:1px solid #d7e4f8;border-radius:12px;padding:10px;background:#fbfdff;margin-bottom:10px}.rate-box h4{margin:0 0 8px}
-      @page{size:A4 landscape;margin:8mm}@media print{.hero,.top-nav,.print-hide,#calcPage{display:none!important}#ratePage{display:block!important}body{background:#fff}.wrap{padding:0}.card{box-shadow:none;border:none} table.sheet{font-size:7.4pt} table.sheet th,table.sheet td{padding:1.5mm 1.0mm}}
+      @page{size:A4 landscape;margin:8mm}@media print{.hero,.top-nav,.print-hide,#calcPage{display:none!important}#ratePage{display:block!important}body{background:#fff}.wrap{padding:0 2mm}.card{box-shadow:none;border:none} table.sheet{font-size:7.1pt} table.sheet th,table.sheet td{padding:1.3mm 1.0mm}}
       .top-nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.page{display:none}.page.active{display:block}
       @media (max-width:860px){.field-grid{grid-template-columns:1fr}}
     </style>
@@ -42,7 +41,7 @@
 
       <div class="top-nav print-hide">
         <button id="goCalcPageBtn" class="btn primary" type="button">料金計算ページ</button>
-        <button id="goRatePageBtn" class="btn soft" type="button">レート表ページ</button>
+        <button id="goRatePageBtn" class="btn soft" type="button">料金の目安</button>
       </div>
 
       <section id="calcPage" class="page active">
@@ -84,15 +83,15 @@
       <section id="ratePage" class="page">
       <article id="rateCard" class="card">
         <div class="head">
-          <h2>レート表シート（時間は左→右 / 分岐色付き）</h2>
-          <button id="printBtn" class="btn good print-hide" type="button">A4で印刷</button>
+          <h2>料金の目安</h2>
+          <button id="printBtn" class="btn good print-hide" type="button">印刷する（A4）</button>
         </div>
         <div class="body">
           <div id="sheetDate" class="sheet-date">--/--</div>
-          <div id="sheetMeta" class="sheet-meta">料金計算を実行すると、このレート表ページが更新されます。</div>
+          <div id="sheetMeta" class="sheet-meta"></div>
           <div class="sheet-wrap">
             <table class="sheet">
-              <tbody id="sheetBody"><tr><td>未生成です。</td></tr></tbody>
+              <tbody id="sheetBody"><tr><td>おすすめ</td><td>未生成です。</td></tr><tr><td>支払目安</td><td>未生成です。</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -199,7 +198,8 @@
       function buildRateSheet(lot, entry, exit) {
         const isSakuraLot = lot.name.includes("桜町");
         const stayDays = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
-        const targetAmount = isSakuraLot ? 1800 * stayDays : null;
+        const ticketBase = 1800;
+        const targetAmount = isSakuraLot ? ticketBase * stayDays : null;
 
         const stepMin = 30;
         const hardEnd = new Date(entry.getTime() + (isSakuraLot ? 72 : 24) * 60 * 60000);
@@ -228,38 +228,37 @@
         let branchIdx = -1;
         if (crossing) branchIdx = display.findIndex((x) => x.time.getTime() >= crossing.getTime());
 
-        const timeRow = ['<tr><td class="label-cell">時刻</td>'];
-        const feeRow = ['<tr><td class="label-cell">通常料金</td>'];
-        const judgeRow = ['<tr><td class="label-cell">判定</td>'];
+        const timeRow = ['<tr><td class="label-cell">出庫時刻</td>'];
+        const recommendRow = ['<tr><td class="label-cell">おすすめ</td>'];
+        const paymentRow = ['<tr><td class="label-cell">支払目安</td>'];
 
         display.forEach((v, idx) => {
           const t = `${pad(v.time.getHours())}:${pad(v.time.getMinutes())}`;
           const c = branchIdx === idx ? 'branch' : '';
           timeRow.push(`<td class="${c}">${t}</td>`);
-          feeRow.push(`<td class="${c}">${yen(v.fee)}</td>`);
+          const recommendTicket = isSakuraLot && targetAmount !== null && v.fee >= targetAmount;
+          let paymentText = yen(v.fee);
+          if (recommendTicket) {
+            const extra = Math.max(0, v.fee - ticketBase);
+            paymentText = extra > 0 ? `${yen(ticketBase)}＋${yen(extra)}` : yen(ticketBase);
+          }
+
           if (isSakuraLot && targetAmount !== null) {
-            const txt = v.fee < targetAmount ? '通常が安い' : '1800円券が安い';
-            judgeRow.push(`<td class="${c}">${txt}</td>`);
+            recommendRow.push(`<td class="${c}">${recommendTicket ? '宿泊券購入：あり' : '宿泊券購入：なし'}</td>`);
+            paymentRow.push(`<td class="${c}">${paymentText}</td>`);
           } else {
-            judgeRow.push('<td>-</td>');
+            recommendRow.push(`<td class="${c}">宿泊券購入：なし</td>`);
+            paymentRow.push(`<td class="${c}">${yen(v.fee)}</td>`);
           }
         });
 
         timeRow.push('</tr>');
-        feeRow.push('</tr>');
-        judgeRow.push('</tr>');
-        byId("sheetBody").innerHTML = `${timeRow.join('')}${feeRow.join('')}${judgeRow.join('')}`;
+        recommendRow.push('</tr>');
+        paymentRow.push('</tr>');
+        byId("sheetBody").innerHTML = `${timeRow.join('')}${recommendRow.join('')}${paymentRow.join('')}`;
 
         byId("sheetDate").textContent = `${entry.getFullYear()}/${pad(entry.getMonth() + 1)}/${pad(entry.getDate())} 入庫`;
-        if (isSakuraLot && targetAmount !== null) {
-          if (crossing) {
-            byId("sheetMeta").textContent = `表示範囲: 通常料金が安い時間帯 ～ 分岐時刻 ${pad(crossing.getHours())}:${pad(crossing.getMinutes())}（1800円 × ${stayDays}泊 = ${yen(targetAmount)}）`;
-          } else {
-            byId("sheetMeta").textContent = `分岐未到達: ${yen(targetAmount)}（1800円 × ${stayDays}泊）まで到達しませんでした。`;
-          }
-        } else {
-          byId("sheetMeta").textContent = `${lot.name}（提携外/参考）`;
-        }
+        byId("sheetMeta").textContent = '';
       }
 
       function sakuraFreeMinutes() {
@@ -347,7 +346,7 @@
         byId("goRatePageBtn").addEventListener("click", ()=>setPage("rate"));
         byId("lotSelect").addEventListener("change", toggleSakuraPanel);
         byId("calcBtn").addEventListener("click", calculate);
-        byId("clearBtn").addEventListener("click", ()=>{byId("entryInput").value="";byId("exitInput").value="";byId("shoppingAmount").value="0";byId("serviceHours").value="0";byId("movieUsed").value="0";byId("cardMember").value="0";byId("resultPrice").textContent="¥0";byId("resultNote").textContent="日時を入力してください。";byId("resultDetail").textContent="";byId("sheetBody").innerHTML='<tr><td>未生成です。</td></tr>';byId("sheetDate").textContent='--/--';byId("sheetMeta").textContent='料金計算を実行すると、このレート表ページが更新されます。';});
+        byId("clearBtn").addEventListener("click", ()=>{byId("entryInput").value="";byId("exitInput").value="";byId("shoppingAmount").value="0";byId("serviceHours").value="0";byId("movieUsed").value="0";byId("cardMember").value="0";byId("resultPrice").textContent="¥0";byId("resultNote").textContent="日時を入力してください。";byId("resultDetail").textContent="";byId("sheetBody").innerHTML='<tr><td>おすすめ</td><td>未生成です。</td></tr><tr><td>支払目安</td><td>未生成です。</td></tr>';byId("sheetDate").textContent='--/--';byId("sheetMeta").textContent='';});
         byId("printBtn").addEventListener("click", ()=>window.print());
         byId("openSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").showModal());
         byId("closeSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").close());
