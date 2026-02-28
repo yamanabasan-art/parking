@@ -10,6 +10,10 @@
       .wrap{max-width:1080px;margin:0 auto;padding:16px}.hero{background:linear-gradient(130deg,#2e7bf2,#5caaff);color:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 4px 10px rgba(31,86,170,.14)}
       .hero h1{margin:0;font-size:clamp(1.2rem,2.2vw,1.55rem)}.card{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 20px rgba(25,49,103,.08)}
       .head{padding:16px 18px 8px;display:flex;justify-content:space-between;align-items:center}.head h2{margin:0;font-size:1.25rem}.body{padding:12px 18px 18px}
+      .guide-card{border:1px solid #d6e5fb;background:#f7fbff;border-radius:12px;padding:10px 12px;margin-bottom:12px}
+      .guide-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+      .guide-title{font-weight:900;color:#2e4f87}
+      .guide-list{margin:0;padding-left:18px;color:#355588}
       .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1 / -1}.calc-fields{grid-template-columns:1fr}
       label{font-size:.96rem;color:var(--muted);font-weight:800}input,select,button{font:inherit}input,select{width:100%;border:1px solid #c6d8f4;border-radius:11px;padding:12px;font-size:1rem}
       input:focus,select:focus{outline:none;border-color:#73abff;box-shadow:0 0 0 3px rgba(115,171,255,.22)}
@@ -23,6 +27,11 @@
       .result.pending{border-color:#e2e9f6;background:#fafcff}
       .result.pending .price{color:#7b8da9}
       .result.active{border-color:#9bc0ff;box-shadow:0 0 0 3px rgba(115,171,255,.18)}
+      .decision{font-size:1.55rem;font-weight:900;line-height:1.2}
+      .decision.good{color:#0a9a60}.decision.bad{color:#d34141}
+      .diff{font-size:.95rem;color:#617a9f;margin-top:4px}
+      .breakdown{margin-top:8px}
+      .breakdown ul{margin:6px 0 0 18px;padding:0;color:#4d6690}
       .price{font-size:clamp(1.85rem,3.2vw,2.45rem);font-weight:900;color:#1a4ea9;margin:5px 0}.muted{color:var(--muted);line-height:1.65}
       details{border:1px dashed #bfd2f7;border-radius:12px;background:#f8fbff;padding:10px} summary{cursor:pointer;font-weight:800;color:#35558f}
       .sheet-date{font-size:1.35rem;font-weight:900;color:#23457d;margin-bottom:6px}
@@ -55,9 +64,20 @@
       <article id="calcCard" class="card">
         <div class="head">
           <h2>①条件を入力</h2>
-          <div class="actions" style="margin-top:0"><button id="openSettingsBtn" class="btn soft" type="button">料金設定</button></div>
+          <div></div>
         </div>
         <div class="body">
+          <section class="guide-card">
+            <div class="guide-head">
+              <div class="guide-title">優待案内</div>
+              <button id="openSettingsBtn" class="btn soft" type="button">料金設定</button>
+            </div>
+            <ul class="guide-list">
+              <li>サクラマチ熊本駐車場：優待あり</li>
+              <li>パスート24：優待あり</li>
+            </ul>
+          </section>
+
           <div class="field-grid calc-fields">
             <div class="field full"><label for="lotSelect">駐車場</label><select id="lotSelect"></select></div>
             <div class="field full"><label for="entryInput">入庫日時</label><input id="entryInput" type="datetime-local" /></div>
@@ -80,10 +100,11 @@
           </details>
 
           <div id="resultCard" class="result pending" aria-live="polite">
-            <div class="muted">計算結果</div>
+            <div id="resultDecision" class="decision">—</div>
             <div id="resultPrice" class="price">—</div>
+            <div id="resultDiff" class="diff">差額 —</div>
+            <details id="resultBreakdown" class="breakdown"><summary>比較内訳</summary><ul id="resultDetailList"></ul></details>
             <div id="resultNote" class="muted">日時を入力してください。</div>
-            <div id="resultDetail" class="muted"></div>
           </div>
         </div>
       </article>
@@ -147,10 +168,10 @@
       const defaultState = {
         hotelSakuraTicket: 1800,
         lots: [
-          { id: "lot-1", name: "駐車場1（桜町）", isSakura: true, weekday: baseRate(300,100,1000,100,800), weekend: baseRate(400,150,1200,100,800), holiday: baseRate(400,150,1200,100,800) },
-          { id: "lot-2", name: "駐車場2（Passurt24 唐島公園）", isSakura: false, weekday: baseRate(320,120,1200,110,800), weekend: baseRate(380,150,1400,120,900), holiday: baseRate(380,150,1400,120,900) },
-          { id: "lot-3", name: "駐車場3（k-c.passurt）", isSakura: false, weekday: baseRate(280,120,1100,100,700), weekend: baseRate(330,140,1300,120,800), holiday: baseRate(330,140,1300,120,800) },
-          { id: "lot-4", name: "駐車場4（NTT AP Park）", isSakura: false, weekday: baseRate(350,150,1500,120,800), weekend: baseRate(420,180,1700,130,900), holiday: baseRate(420,180,1700,130,900) }
+          { id: "lot-1", name: "サクラマチ熊本駐車場", isSakura: true, weekday: baseRate(300,100,1000,100,800), weekend: baseRate(400,150,1200,100,800), holiday: baseRate(400,150,1200,100,800) },
+          { id: "lot-2", name: "パスート24", isSakura: false, weekday: baseRate(320,120,1200,110,800), weekend: baseRate(380,150,1400,120,900), holiday: baseRate(380,150,1400,120,900) },
+          { id: "lot-3", name: "k-c passurt駐車場", isSakura: false, weekday: baseRate(280,120,1100,100,700), weekend: baseRate(330,140,1300,120,800), holiday: baseRate(330,140,1300,120,800) },
+          { id: "lot-4", name: "NTT AP Park", isSakura: false, weekday: baseRate(350,150,1500,120,800), weekend: baseRate(420,180,1700,130,900), holiday: baseRate(420,180,1700,130,900) }
         ],
         sakuraRules: [
           { id: crypto.randomUUID(), label: "買い物 3,300円以上", type: "shopping", threshold: 3300, freeMinutes: 120 },
@@ -172,7 +193,18 @@
       function loadState() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return clone(defaultState);
-        try { const s = JSON.parse(raw); if (!Array.isArray(s.lots) || !s.lots.length) return clone(defaultState); return s; } catch { return clone(defaultState); }
+        try {
+          const s = JSON.parse(raw);
+          if (!Array.isArray(s.lots) || !s.lots.length) return clone(defaultState);
+          const renameMap = {
+            "lot-1": "サクラマチ熊本駐車場",
+            "lot-2": "パスート24",
+            "lot-3": "k-c passurt駐車場",
+            "lot-4": "NTT AP Park"
+          };
+          s.lots = s.lots.map((lot) => ({ ...lot, name: renameMap[lot.id] ?? lot.name }));
+          return s;
+        } catch { return clone(defaultState); }
       }
       let state = loadState();
       const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -211,7 +243,7 @@
         return { total, dayFee: day, nightFee: night };
       }
       function buildRateSheet(lot, entry, exit) {
-        const isSakuraLot = lot.name.includes("桜町");
+        const isSakuraLot = !!lot.isSakura;
         const stayDays = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
         const ticketBase = 1800;
         const targetAmount = isSakuraLot ? ticketBase * stayDays : null;
@@ -320,16 +352,16 @@
 
       function calculate() {
         const lot = getLot(byId("lotSelect").value), entry = new Date(byId("entryInput").value), exit = new Date(byId("exitInput").value);
-        if (!lot || !byId("entryInput").value || !byId("exitInput").value || Number.isNaN(entry.getTime()) || Number.isNaN(exit.getTime())) { byId("resultPrice").textContent = "—"; byId("resultNote").textContent = "日時を正しく入力してください。"; byId("resultDetail").textContent = ""; byId("resultCard").classList.remove("active"); byId("resultCard").classList.add("pending"); return; }
-        if (exit <= entry) { byId("resultPrice").textContent = "—"; byId("resultNote").textContent = "出庫は入庫より後にしてください。"; byId("resultDetail").textContent = ""; byId("resultCard").classList.remove("active"); byId("resultCard").classList.add("pending"); return; }
+        if (!lot || !byId("entryInput").value || !byId("exitInput").value || Number.isNaN(entry.getTime()) || Number.isNaN(exit.getTime())) { byId("resultPrice").textContent = "—"; byId("resultNote").textContent = "日時を正しく入力してください。"; byId("resultDetailList").innerHTML = ""; byId("resultCard").classList.remove("active"); byId("resultCard").classList.add("pending"); return; }
+        if (exit <= entry) { byId("resultPrice").textContent = "—"; byId("resultNote").textContent = "出庫は入庫より後にしてください。"; byId("resultDetailList").innerHTML = ""; byId("resultCard").classList.remove("active"); byId("resultCard").classList.add("pending"); return; }
 
         const normal = calcNormalFee(lot, entry, exit);
         const stayNights = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
         const sakuraPack = 1800 * stayNights;
         const passurtPack = 1200 * stayNights;
 
-        const isSakuraLot = lot.name.includes("桜町");
-        const isPassurtLot = lot.name.includes("Passurt24");
+        const isSakuraLot = !!lot.isSakura;
+        const isPassurtLot = lot.name.includes("パスート24") || lot.id === "lot-2";
 
         if (isSakuraLot) {
           const free = sakuraFreeMinutes();
@@ -337,21 +369,30 @@
           const adjusted = adjEntry < exit ? calcNormalFee(lot, adjEntry, exit).total : 0;
           const cheaper = Math.min(adjusted, sakuraPack);
           const diff = Math.abs(adjusted - sakuraPack);
-          const better = adjusted <= sakuraPack ? "通常料金" : "桜町優待料金";
+          const better = adjusted <= sakuraPack ? "通常" : "優待";
           byId("resultPrice").textContent = yen(cheaper);
-          byId("resultNote").innerHTML = `桜町：<span style="color:#03a66f;font-weight:800">${better}が安い</span>（差額 ${yen(diff)}）`;
-          byId("resultDetail").textContent = `通常料金(割引後) ${yen(adjusted)} / 桜町優待 ${yen(sakuraPack)}（1800円×${stayNights}泊） / パスート24優待 ${yen(passurtPack)}（1200円×${stayNights}泊） / 買い物 ${free.shopping}分 / 映画 ${free.movie}分 / カード ${free.card}分 / サービス券 ${free.service}分`;
+          byId("resultDecision").textContent = better === "優待" ? "優待が安い" : "通常が安い";
+          byId("resultDecision").className = `decision ${better === "優待" ? "good" : "bad"}`;
+          byId("resultDiff").textContent = `差額 ${yen(diff)}`;
+          byId("resultDetailList").innerHTML = `<li>通常：${yen(adjusted)}</li><li>優待：${yen(sakuraPack)}（サクラマチ）</li><li>優待：${yen(passurtPack)}（パスート24）</li>`;
+          byId("resultNote").textContent = `サクラマチ熊本駐車場の比較結果`;
         } else if (isPassurtLot) {
           const cheaper = Math.min(normal.total, passurtPack);
           const diff = Math.abs(normal.total - passurtPack);
-          const better = normal.total <= passurtPack ? "通常料金" : "パスート24優待料金";
+          const better = normal.total <= passurtPack ? "通常" : "優待";
           byId("resultPrice").textContent = yen(cheaper);
-          byId("resultNote").innerHTML = `Passurt24：<span style="color:#03a66f;font-weight:800">${better}が安い</span>（差額 ${yen(diff)}）`;
-          byId("resultDetail").textContent = `通常料金 ${yen(normal.total)} / パスート24優待 ${yen(passurtPack)}（1200円×${stayNights}泊） / 桜町優待 ${yen(sakuraPack)}（1800円×${stayNights}泊）`;
+          byId("resultDecision").textContent = better === "優待" ? "優待が安い" : "通常が安い";
+          byId("resultDecision").className = `decision ${better === "優待" ? "good" : "bad"}`;
+          byId("resultDiff").textContent = `差額 ${yen(diff)}`;
+          byId("resultDetailList").innerHTML = `<li>通常：${yen(normal.total)}</li><li>優待：${yen(passurtPack)}（パスート24）</li>`;
+          byId("resultNote").textContent = `パスート24の比較結果`;
         } else {
           byId("resultPrice").textContent = yen(normal.total);
-          byId("resultNote").textContent = `${lot.name} の通常料金（提携外）`;
-          byId("resultDetail").textContent = `日中 ${yen(normal.dayFee)} / 夜間 ${yen(normal.nightFee)} / 提携優待比較は対象外`;
+          byId("resultDecision").textContent = "通常が安い";
+          byId("resultDecision").className = "decision bad";
+          byId("resultDiff").textContent = "差額 —";
+          byId("resultDetailList").innerHTML = `<li>通常：${yen(normal.total)}</li><li>優待：—</li>`;
+          byId("resultNote").textContent = `${lot.name}（提携外）`;
         }
 
         byId("resultCard").classList.remove("pending");
@@ -419,8 +460,11 @@
           byId("movieUsed").value="0";
           byId("cardMember").value="0";
           byId("resultPrice").textContent="—";
+          byId("resultDecision").textContent="—";
+          byId("resultDecision").className="decision";
+          byId("resultDiff").textContent="差額 —";
+          byId("resultDetailList").innerHTML='';
           byId("resultNote").textContent="日時を入力してください。";
-          byId("resultDetail").textContent="";
           byId("resultCard").classList.remove("active");
           byId("resultCard").classList.add("pending");
           byId("sheetBody").innerHTML='<tr><td>おすすめ</td><td>未生成です。</td></tr><tr><td>支払目安</td><td>未生成です。</td></tr>';
