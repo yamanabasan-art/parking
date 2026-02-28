@@ -27,6 +27,7 @@
       .sheet-date{font-size:1.35rem;font-weight:900;color:#23457d;margin-bottom:6px}
       .sheet-meta{display:none}
       .sheet-wrap{overflow-x:auto;border:2px solid #c4d6f6;border-radius:10px}
+      .print-only{display:none}
       table.sheet{width:max-content;min-width:100%;border-collapse:collapse}
       table.sheet th,table.sheet td{border:1px solid #cfdcf6;padding:7px 8px;text-align:center;white-space:nowrap}
       table.sheet th{background:#eef4ff;color:#4c6793}
@@ -35,7 +36,7 @@
       dialog{width:min(980px,calc(100% - 18px));border:1px solid #d9e4f8;border-radius:14px;padding:0} dialog::backdrop{background:rgba(8,16,35,.45)}
       .modal-head{padding:12px 14px;border-bottom:1px solid #e3ebf8;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:12px 14px 16px;max-height:76vh;overflow:auto}
       .rate-box{border:1px solid #d7e4f8;border-radius:12px;padding:10px;background:#fbfdff;margin-bottom:10px}.rate-box h4{margin:0 0 8px}
-      @page{size:A4 landscape;margin:8mm}@media print{.hero,.top-nav,.print-hide,#calcPage{display:none!important}#ratePage{display:block!important}body{background:#fff}.wrap{padding:0 2mm}.card{box-shadow:none;border:none} table.sheet{font-size:7.1pt} table.sheet th,table.sheet td{padding:1.3mm 1.0mm}}
+      @page{size:A4 landscape;margin:5mm}@media print{.hero,.top-nav,.print-hide,#calcPage,.screen-only{display:none!important}#ratePage,.print-only{display:block!important}body{background:#fff}.wrap{padding:0 1mm}.card{box-shadow:none;border:none} table.sheet{font-size:6.6pt;table-layout:fixed;width:100%} table.sheet th,table.sheet td{padding:1.1mm .8mm}.print-sheet{margin-bottom:1.5mm;break-inside:avoid-page}}
       .top-nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.page{display:none}.page.active{display:block}
       @media (max-width:860px){.field-grid{grid-template-columns:1fr}.dt-wrap{grid-template-columns:1fr}.arrow{display:none}.action-bar{flex-direction:column;align-items:stretch}.btn-main,.btn-reset{width:100%}}
     </style>
@@ -101,11 +102,12 @@
         <div class="body">
           <div id="sheetDate" class="sheet-date">--/--</div>
           <div id="sheetMeta" class="sheet-meta"></div>
-          <div class="sheet-wrap">
+          <div class="sheet-wrap screen-only">
             <table class="sheet">
               <tbody id="sheetBody"><tr><td>おすすめ</td><td>未生成です。</td></tr><tr><td>支払目安</td><td>未生成です。</td></tr></tbody>
             </table>
           </div>
+          <div id="printSheetBlocks" class="print-only"></div>
         </div>
       </article>
       </section>
@@ -269,6 +271,36 @@
         paymentRow.push('</tr>');
         byId("sheetBody").innerHTML = `${timeRow.join('')}${recommendRow.join('')}${paymentRow.join('')}`;
 
+        const colsPerPrintBlock = 9;
+        const blockHtml = [];
+        for (let i = 0; i < raw.length; i += colsPerPrintBlock) {
+          const chunk = raw.slice(i, i + colsPerPrintBlock);
+          const r1 = ['<tr><td class="label-cell">出庫時刻</td>'];
+          const r2 = ['<tr><td class="label-cell">おすすめ</td>'];
+          const r3 = ['<tr><td class="label-cell">支払目安</td>'];
+
+          chunk.forEach((v, offset) => {
+            const idx = i + offset;
+            const t = `${pad(v.time.getHours())}:${pad(v.time.getMinutes())}`;
+            const c = branchIdx === idx ? 'branch' : '';
+            const recommendTicket = isSakuraLot && targetAmount !== null && v.fee >= targetAmount;
+            let paymentText = yen(v.fee);
+            if (recommendTicket) {
+              const extra = Math.max(0, v.fee - ticketBase);
+              paymentText = extra > 0 ? `${yen(ticketBase)}＋${yen(extra)}` : yen(ticketBase);
+            }
+            r1.push(`<td class="${c}">${t}</td>`);
+            r2.push(`<td class="${c}">${recommendTicket ? '宿泊券購入：あり' : '宿泊券購入：なし'}</td>`);
+            r3.push(`<td class="${c}">${paymentText}</td>`);
+          });
+
+          r1.push('</tr>');
+          r2.push('</tr>');
+          r3.push('</tr>');
+          blockHtml.push(`<table class="sheet print-sheet"><tbody>${r1.join('')}${r2.join('')}${r3.join('')}</tbody></table>`);
+        }
+        byId("printSheetBlocks").innerHTML = blockHtml.join('');
+
         byId("sheetDate").textContent = `${entry.getFullYear()}/${pad(entry.getMonth() + 1)}/${pad(entry.getDate())} 入庫`;
         byId("sheetMeta").textContent = '';
       }
@@ -372,6 +404,7 @@
           byId("sheetBody").innerHTML='<tr><td>おすすめ</td><td>未生成です。</td></tr><tr><td>支払目安</td><td>未生成です。</td></tr>';
           byId("sheetDate").textContent='--/--';
           byId("sheetMeta").textContent='';
+          byId("printSheetBlocks").innerHTML='';
         });
         byId("printBtn").addEventListener("click", ()=>window.print());
         byId("openSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").showModal());
