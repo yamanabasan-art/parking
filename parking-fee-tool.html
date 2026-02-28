@@ -24,7 +24,8 @@
       dialog{width:min(980px,calc(100% - 18px));border:1px solid #d9e4f8;border-radius:14px;padding:0} dialog::backdrop{background:rgba(8,16,35,.45)}
       .modal-head{padding:12px 14px;border-bottom:1px solid #e3ebf8;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:12px 14px 16px;max-height:76vh;overflow:auto}
       .rate-box{border:1px solid #d7e4f8;border-radius:12px;padding:10px;background:#fbfdff;margin-bottom:10px}.rate-box h4{margin:0 0 8px}
-      @page{size:A4 portrait;margin:11mm}@media print{.hero,.print-hide,#calcCard{display:none!important}body{background:#fff}.wrap{padding:0}.card{box-shadow:none;border:none}}
+      @page{size:A4 portrait;margin:11mm}@media print{.hero,.top-nav,.print-hide,#calcPage{display:none!important}#ratePage{display:block!important}body{background:#fff}.wrap{padding:0}.card{box-shadow:none;border:none}}
+      .top-nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.page{display:none}.page.active{display:block}
       @media (max-width:860px){.field-grid{grid-template-columns:1fr}}
     </style>
   </head>
@@ -32,6 +33,12 @@
     <main class="wrap">
       <section class="hero"><h1>KOKO HOTEL Premier 熊本 駐車場料金ツール</h1></section>
 
+      <div class="top-nav print-hide">
+        <button id="goCalcPageBtn" class="btn primary" type="button">料金計算ページ</button>
+        <button id="goRatePageBtn" class="btn soft" type="button">レート表ページ</button>
+      </div>
+
+      <section id="calcPage" class="page active">
       <article id="calcCard" class="card">
         <div class="head">
           <h2>料金計算</h2>
@@ -65,7 +72,9 @@
           </div>
         </div>
       </article>
+      </section>
 
+      <section id="ratePage" class="page">
       <article id="rateCard" class="card">
         <div class="head">
           <h2>レート表シート（翌日05:00から12時間）</h2>
@@ -79,6 +88,7 @@
           </table>
         </div>
       </article>
+      </section>
     </main>
 
     <dialog id="settingsDialog">
@@ -215,6 +225,7 @@
           byId("resultDetail").textContent = `通常料金(割引後) ${yen(adjusted)} / ホテル宿泊券 ${yen(hotel)} / 買い物 ${free.shopping}分 / 映画 ${free.movie}分 / カード ${free.card}分 / サービス券 ${free.service}分`;
         }
         buildRateSheet(lot, entry);
+        byId("goRatePageBtn").click();
       }
 
       function renderRateEditors() {
@@ -238,6 +249,17 @@
 
       function init() {
         fillSelectors(); loadSettingsPanel();
+
+        const setPage = (page) => {
+          byId("calcPage").classList.toggle("active", page === "calc");
+          byId("ratePage").classList.toggle("active", page === "rate");
+          byId("goCalcPageBtn").classList.toggle("primary", page === "calc");
+          byId("goCalcPageBtn").classList.toggle("soft", page !== "calc");
+          byId("goRatePageBtn").classList.toggle("primary", page === "rate");
+          byId("goRatePageBtn").classList.toggle("soft", page !== "rate");
+        };
+        byId("goCalcPageBtn").addEventListener("click", ()=>setPage("calc"));
+        byId("goRatePageBtn").addEventListener("click", ()=>setPage("rate"));
         byId("lotSelect").addEventListener("change", toggleSakuraPanel);
         byId("calcBtn").addEventListener("click", calculate);
         byId("clearBtn").addEventListener("click", ()=>{byId("entryInput").value="";byId("exitInput").value="";byId("shoppingAmount").value="0";byId("serviceHours").value="0";byId("movieUsed").value="0";byId("cardMember").value="0";byId("resultPrice").textContent="¥0";byId("resultNote").textContent="日時を入力してください。";byId("resultDetail").textContent="";byId("sheetBody").innerHTML='<tr><td colspan="2">未生成です。</td></tr>';byId("sheetMeta").textContent='料金計算を実行すると、同時にこのシートが更新されます。';});
