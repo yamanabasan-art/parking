@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KOKO HOTEL Premier 熊本 駐車場料金ツール</title>
+    <style>
+      :root{--bg:#f4f8ff;--card:#fff;--line:#d8e5fa;--text:#223456;--muted:#6078a1;--primary:#1f6feb;--soft:#e8f1ff;--good:#03a66f}
+      *{box-sizing:border-box} body{margin:0;font-family:"Noto Sans JP",sans-serif;background:linear-gradient(180deg,#edf4ff,var(--bg));color:var(--text)}
+      .wrap{max-width:1080px;margin:0 auto;padding:16px}.hero{background:linear-gradient(130deg,#2e7bf2,#5caaff);color:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 4px 10px rgba(31,86,170,.14)}
+      .hero h1{margin:0;font-size:clamp(1.2rem,2.2vw,1.55rem)}.card{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 20px rgba(25,49,103,.08)}
+      .head{padding:16px 18px 8px;display:flex;justify-content:space-between;align-items:center}.head h2{margin:0;font-size:1.25rem}.body{padding:12px 18px 18px}
+      .guide-card{border:1px solid #d6e5fb;background:#f7fbff;border-radius:12px;padding:10px 12px;margin-bottom:12px}
+      .guide-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+      .guide-title{font-weight:900;color:#2e4f87}
+      .guide-list{margin:0;padding-left:18px;color:#355588}
+      .guide-list li{margin:2px 0}
+      .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1 / -1}.calc-fields{grid-template-columns:1fr}
+      label{font-size:.96rem;color:var(--muted);font-weight:800}input,select,button{font:inherit}input,select{width:100%;border:1px solid #c6d8f4;border-radius:11px;padding:12px;font-size:1rem}
+      input:focus,select:focus{outline:none;border-color:#73abff;box-shadow:0 0 0 3px rgba(115,171,255,.22)}
+      .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.btn{border:none;border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer}
+      .btn.primary{background:var(--primary);color:#fff}.btn.soft{background:var(--soft);color:#2f528f}.btn.good{background:var(--good);color:#fff}
+      .btn.calc{padding:10px 18px;min-width:180px;font-size:1rem;line-height:1.1}
+      .action-bar{position:sticky;bottom:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:12px;border:1px solid #d4e3fb;border-radius:12px;background:rgba(255,255,255,.96);backdrop-filter:blur(2px)}
+      .btn-main{height:48px;min-width:220px;font-size:1.03rem}
+      .btn-reset{height:48px;min-width:160px;background:#f3f5f8;color:#3d4e69;border:1px solid #d7dee9}
+      .result{margin-top:12px;border:1px solid #d3e4ff;border-radius:12px;background:linear-gradient(135deg,#eef6ff,#f9fbff);padding:14px}
+      .result.pending{border-color:#e2e9f6;background:#fafcff}
+      .result.pending .price{color:#7b8da9}
+      .result.active{border-color:#9bc0ff;box-shadow:0 0 0 3px rgba(115,171,255,.18)}
+      .decision{font-size:1.55rem;font-weight:900;line-height:1.2}
+      .decision.good{color:#0a9a60}.decision.bad{color:#d34141}
+      .diff{font-size:.95rem;color:#617a9f;margin-top:4px}
+      .breakdown{margin-top:8px}
+      .breakdown ul{margin:6px 0 0 18px;padding:0;color:#4d6690}
+      .sub-card{margin-top:14px;border:1px solid #d9e6fb;border-radius:12px;background:#fbfdff;padding:12px}
+      .sub-card summary{font-size:1rem}
+      .mini-table{margin-top:10px;overflow:auto;border:1px solid #d7e4f8;border-radius:10px}
+      .mini-table table{width:100%;border-collapse:collapse}
+      .mini-table th,.mini-table td{border:1px solid #dbe6fb;padding:8px 10px;text-align:left}
+      .confirm-line{font-size:.92rem;color:#5d7397;margin-top:8px}
+      .price{font-size:clamp(1.85rem,3.2vw,2.45rem);font-weight:900;color:#1a4ea9;margin:5px 0}.muted{color:var(--muted);line-height:1.65}
+      details{border:1px dashed #bfd2f7;border-radius:12px;background:#f8fbff;padding:10px} summary{cursor:pointer;font-weight:800;color:#35558f}
+      .sheet-date{font-size:1.35rem;font-weight:900;color:#23457d;margin-bottom:6px}
+      .sheet-meta{display:none}
+      .sheet-wrap{overflow-x:auto;border:2px solid #c4d6f6;border-radius:10px}
+      .print-only{display:none}
+      table.sheet{width:max-content;min-width:100%;border-collapse:collapse}
+      table.sheet th,table.sheet td{border:1px solid #cfdcf6;padding:7px 8px;text-align:center;white-space:nowrap}
+      table.sheet th{background:#eef4ff;color:#4c6793}
+      .branch{background:#fff5c4 !important;color:#7a4b00;font-weight:800}
+      .label-cell{background:#f4f8ff;font-weight:800;position:sticky;left:0;z-index:1}
+      dialog{width:min(980px,calc(100% - 18px));border:1px solid #d9e4f8;border-radius:14px;padding:0} dialog::backdrop{background:rgba(8,16,35,.45)}
+      .modal-head{padding:12px 14px;border-bottom:1px solid #e3ebf8;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:12px 14px 16px;max-height:76vh;overflow:auto}
+      .rate-box{border:1px solid #d7e4f8;border-radius:12px;padding:10px;background:#fbfdff;margin-bottom:10px}.rate-box h4{margin:0 0 8px}
+      @page{size:A4 landscape;margin:5mm}@media print{.hero,.top-nav,.print-hide,#calcPage,.screen-only{display:none!important}#ratePage,.print-only{display:block!important}body{background:#fff}.wrap{padding:0 1mm}.card{box-shadow:none;border:none} table.sheet{font-size:6.6pt;table-layout:fixed;width:100%} table.sheet th,table.sheet td{padding:1.1mm .8mm}.print-sheet{margin-bottom:1.5mm;break-inside:avoid-page}.sub-card{display:none!important}}
+      .top-nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.page{display:none}.page.active{display:block}
+      @media (max-width:860px){.field-grid{grid-template-columns:1fr}.action-bar{flex-direction:column;align-items:stretch}.btn-main,.btn-reset{width:100%}}
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero"><h1>KOKO HOTEL Premier 熊本 駐車場料金ツール</h1></section>
+
+      <div class="top-nav print-hide">
+        <button id="goCalcPageBtn" class="btn primary" type="button">料金計算ページ</button>
+        <button id="goRatePageBtn" class="btn soft" type="button">料金の目安</button>
+      </div>
+
+      <section id="calcPage" class="page active">
+      <article id="calcCard" class="card">
+        <div class="head">
+          <h2>①条件を入力</h2>
+          <div></div>
+        </div>
+        <div class="body">
+          <section class="guide-card">
+            <div class="guide-head">
+              <div class="guide-title">優待案内</div>
+              <button id="openSettingsBtn" class="btn soft" type="button">料金設定</button>
+            </div>
+            <ul class="guide-list">
+              <li id="tieupGuideLot1">サクラマチ熊本駐車場：提携時間 — / 料金（泊）—</li>
+              <li id="tieupGuideLot2">パスート24：提携時間 — / 料金（泊）—</li>
+            </ul>
+          </section>
+
+          <div class="field-grid calc-fields">
+            <div class="field full"><label for="lotSelect">駐車場</label><select id="lotSelect"></select></div>
+            <div class="field full"><label for="entryInput">入庫日時</label><input id="entryInput" type="datetime-local" /></div>
+            <div class="field full"><label for="exitInput">出庫日時</label><input id="exitInput" type="datetime-local" /></div>
+          </div>
+
+          <div class="action-bar print-hide">
+            <button id="calcBtn" class="btn primary btn-main" type="button">料金計算</button>
+            <button id="clearBtn" class="btn btn-reset" type="button">入力をリセット</button>
+          </div>
+
+          <details id="sakuraDetails" class="full" style="margin-top:12px" hidden>
+            <summary>桜町の特典入力を開く（通常は不要）</summary>
+            <div class="field-grid" style="margin-top:10px">
+              <div class="field"><label for="shoppingAmount">桜町 買い物金額（円）</label><input id="shoppingAmount" type="number" min="0" value="0" /></div>
+              <div class="field"><label for="serviceHours">サービス券時間（時間）</label><input id="serviceHours" type="number" min="0" step="0.5" value="0" /></div>
+              <div class="field"><label for="movieUsed">TOHOシネマズ利用</label><select id="movieUsed"><option value="0">利用なし</option><option value="1">利用あり</option></select></div>
+              <div class="field"><label for="cardMember">SAKURA MACHIカード会員</label><select id="cardMember"><option value="0">会員でない</option><option value="1">会員</option></select></div>
+            </div>
+          </details>
+
+          <details class="sub-card print-hide" id="outsideTieupDetails">
+            <summary>提携外→提携（参考）</summary>
+            <div class="field-grid calc-fields" style="margin-top:10px">
+              <div class="field"><label for="outsideEntryInput">提携外（最初に停めた）入庫日時</label><input id="outsideEntryInput" type="datetime-local" /></div>
+              <div class="field"><label for="outsideExitInput">提携外 出庫予定日時</label><input id="outsideExitInput" type="datetime-local" /></div>
+              <div class="field"><label for="tieupEntryInput">提携駐車場 入庫予定日時</label><input id="tieupEntryInput" type="datetime-local" /></div>
+              <div class="field"><label for="tieupExitInput">提携駐車場 出庫予定日時</label><input id="tieupExitInput" type="datetime-local" /></div>
+            </div>
+            <div class="actions"><button id="outsideTieupCalcBtn" class="btn soft" type="button">提携外→提携を計算</button></div>
+            <div id="outsideTieupConfirm" class="confirm-line">日時を入力してください。</div>
+            <div class="mini-table"><table><thead><tr><th>時間</th><th>支払目安</th></tr></thead><tbody id="outsideTieupBody"><tr><td colspan="2">未計算</td></tr></tbody></table></div>
+          </details>
+
+          <div id="resultCard" class="result pending" aria-live="polite">
+            <div id="resultDecision" class="decision">—</div>
+            <div id="resultPrice" class="price">—</div>
+            <div id="resultDiff" class="diff">差額 —</div>
+            <details id="resultBreakdown" class="breakdown"><summary>比較内訳</summary><ul id="resultDetailList"></ul></details>
+            <div id="resultNote" class="muted">日時を入力してください。</div>
+          </div>
+        </div>
+      </article>
+      </section>
+
+      <section id="ratePage" class="page">
+      <article id="rateCard" class="card">
+        <div class="head">
+          <h2>料金の目安</h2>
+          <button id="printBtn" class="btn good print-hide" type="button">印刷する（A4）</button>
+        </div>
+        <div class="body">
+          <div id="sheetDate" class="sheet-date">--/--</div>
+          <div id="sheetMeta" class="sheet-meta"></div>
+          <div class="sheet-wrap screen-only">
+            <table class="sheet">
+              <tbody id="sheetBody"><tr><td>おすすめ</td><td>未生成です。</td></tr><tr><td>支払目安</td><td>未生成です。</td></tr></tbody>
+            </table>
+          </div>
+          <div id="printSheetBlocks" class="print-only"></div>
+        </div>
+      </article>
+      </section>
+    </main>
+
+    <dialog id="settingsDialog">
+      <div class="modal-head"><strong>料金設定</strong><button id="closeSettingsBtn" class="btn soft" type="button">閉じる</button></div>
+      <div class="modal-body">
+        <div class="field"><label for="settingLotSelect">編集する駐車場</label><select id="settingLotSelect"></select></div>
+        <div class="actions"><button id="addLotBtn" class="btn soft" type="button">+ 駐車場追加</button></div>
+
+        <div class="rate-box">
+          <h4>日中時間（平日/土日/祝 共通）</h4>
+          <div class="field-grid">
+            <div class="field"><label for="dayStart">日中開始（時）</label><input id="dayStart" type="number" min="0" max="23" /></div>
+            <div class="field"><label for="dayEnd">日中終了（時）</label><input id="dayEnd" type="number" min="1" max="24" /></div>
+          </div>
+        </div>
+
+        <div id="rateEditors"></div>
+
+        <div class="rate-box">
+          <h4>桜町特典ルール</h4>
+          <div id="sakuraRuleEditors"></div>
+          <div class="actions"><button id="addRuleBtn" class="btn soft" type="button">+ ルール追加</button></div>
+        </div>
+
+        <div class="rate-box">
+          <h4>駐車場一覧（表示名編集）</h4>
+          <div id="lotNameEditors"></div>
+        </div>
+
+        <div class="actions"><button id="saveSettingsBtn" class="btn primary" type="button">設定保存</button><button id="resetSettingsBtn" class="btn soft" type="button">初期値</button></div>
+        <div id="settingsMsg" class="muted"></div>
+      </div>
+    </dialog>
+
+    <script>
+      const STORAGE_KEY = "kokoParkingToolV9";
+      const baseRate = (firstFee, afterFee, dayMax, nightFee, nightMax) => ({ firstMinutes: 60, firstFee, afterMinutes: 30, afterFee, dayMax, nightMinutes: 60, nightFee, nightMax, dayStart: 8, dayEnd: 22 });
+      const defaultState = {
+        hotelSakuraTicket: 1800,
+        lots: [
+          { id: "lot-1", name: "サクラマチ熊本駐車場", isSakura: true, tieUpNightsLabel: "泊", tieUpHours: 20, tieUpPricePerNight: 1800, weekday: baseRate(300,100,1000,100,800), weekend: baseRate(400,150,1200,100,800), holiday: baseRate(400,150,1200,100,800) },
+          { id: "lot-2", name: "パスート24", isSakura: false, tieUpNightsLabel: "泊", tieUpHours: 22, tieUpPricePerNight: 1200, weekday: baseRate(320,120,1200,110,800), weekend: baseRate(380,150,1400,120,900), holiday: baseRate(380,150,1400,120,900) },
+          { id: "lot-3", name: "k-c passurt駐車場", isSakura: false, tieUpNightsLabel: "泊", tieUpHours: 0, tieUpPricePerNight: 0, weekday: baseRate(280,120,1100,100,700), weekend: baseRate(330,140,1300,120,800), holiday: baseRate(330,140,1300,120,800) },
+          { id: "lot-4", name: "NTT AP Park", isSakura: false, tieUpNightsLabel: "泊", tieUpHours: 0, tieUpPricePerNight: 0, weekday: baseRate(350,150,1500,120,800), weekend: baseRate(420,180,1700,130,900), holiday: baseRate(420,180,1700,130,900) }
+        ],
+        sakuraRules: [
+          { id: crypto.randomUUID(), label: "買い物 3,300円以上", type: "shopping", threshold: 3300, freeMinutes: 120 },
+          { id: crypto.randomUUID(), label: "買い物 11,000円以上", type: "shopping", threshold: 11000, freeMinutes: 180 },
+          { id: crypto.randomUUID(), label: "買い物 33,000円以上", type: "shopping", threshold: 33000, freeMinutes: 240 },
+          { id: crypto.randomUUID(), label: "TOHOシネマズ利用", type: "movie", threshold: 1, freeMinutes: 180 },
+          { id: crypto.randomUUID(), label: "SAKURA MACHIカード会員", type: "card", threshold: 1, freeMinutes: 60 }
+        ]
+      };
+
+      const byId = (id) => document.getElementById(id);
+      const clone = (v) => JSON.parse(JSON.stringify(v));
+      const num = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
+      const yen = (v) => new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 }).format(v);
+      const pad = (v) => String(v).padStart(2, "0");
+      const fmt = (dt) => `${dt.getFullYear()}/${pad(dt.getMonth() + 1)}/${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      const dateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+      function loadState() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return clone(defaultState);
+        try {
+          const s = JSON.parse(raw);
+          if (!Array.isArray(s.lots) || !s.lots.length) return clone(defaultState);
+          const renameMap = {
+            "lot-1": "サクラマチ熊本駐車場",
+            "lot-2": "パスート24",
+            "lot-3": "k-c passurt駐車場",
+            "lot-4": "NTT AP Park"
+          };
+          s.lots = s.lots.map((lot) => ({ ...lot, name: renameMap[lot.id] ?? lot.name, tieUpNightsLabel: lot.tieUpNightsLabel ?? "泊", tieUpHours: lot.tieUpHours ?? 0, tieUpPricePerNight: lot.tieUpPricePerNight ?? 0 }));
+          return s;
+        } catch { return clone(defaultState); }
+      }
+      let state = loadState();
+      const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+      function nthWeekdayOfMonth(year, month, weekday, nth) { const first = new Date(year, month - 1, 1); return 1 + ((7 + weekday - first.getDay()) % 7) + (nth - 1) * 7; }
+      function springEquinoxDay(year) { return Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4)); }
+      function autumnEquinoxDay(year) { return Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4)); }
+      function holidaySet(year) { const h = new Set(); const add = (m, d) => h.add(`${year}-${pad(m)}-${pad(d)}`); add(1,1); add(2,11); add(2,23); add(4,29); add(5,3); add(5,4); add(5,5); add(8,11); add(11,3); add(11,23); add(3, springEquinoxDay(year)); add(9, autumnEquinoxDay(year)); add(1, nthWeekdayOfMonth(year,1,1,2)); add(7, nthWeekdayOfMonth(year,7,1,3)); add(9, nthWeekdayOfMonth(year,9,1,3)); add(10, nthWeekdayOfMonth(year,10,1,2)); return h; }
+      const dayType = (d) => holidaySet(d.getFullYear()).has(dateKey(d)) ? "holiday" : (d.getDay()===0||d.getDay()===6 ? "weekend" : "weekday");
+
+      const getLot = (id) => state.lots.find((l) => l.id === id);
+      function fillSelectors() {
+        ["lotSelect", "settingLotSelect"].forEach((id) => {
+          const s = byId(id), keep = s.value; s.innerHTML = "";
+          state.lots.forEach((lot) => { const o = document.createElement("option"); o.value = lot.id; o.textContent = lot.name; s.appendChild(o); });
+          if (keep) s.value = keep;
+        });
+        toggleSakuraPanel();
+        updateTieUpGuide();
+      }
+      function tieUpFeeForRange(lot, entry, exit) {
+        if (!lot || !lot.tieUpPricePerNight || lot.tieUpPricePerNight <= 0) return calcNormalFee(lot, entry, exit).total;
+        const nights = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
+        return lot.tieUpPricePerNight * nights;
+      }
+      function updateTieUpGuide() {
+        const lot1 = getLot("lot-1"), lot2 = getLot("lot-2");
+        if (lot1) byId("tieupGuideLot1").textContent = `${lot1.name}：提携時間 ${lot1.tieUpHours || 0}時間 / 料金（${lot1.tieUpNightsLabel || "泊"}）${yen(lot1.tieUpPricePerNight || 0)}`;
+        if (lot2) byId("tieupGuideLot2").textContent = `${lot2.name}：提携時間 ${lot2.tieUpHours || 0}時間 / 料金（${lot2.tieUpNightsLabel || "泊"}）${yen(lot2.tieUpPricePerNight || 0)}`;
+      }
+      function calculateOutsideToTieup() {
+        const lotOutside = getLot(byId("lotSelect").value);
+        const lotTieup = getLot("lot-1");
+        const outsideEntry = new Date(byId("outsideEntryInput").value);
+        const outsideExit = new Date(byId("outsideExitInput").value);
+        const tieupEntry = new Date(byId("tieupEntryInput").value);
+        const tieupExit = new Date(byId("tieupExitInput").value);
+        if (!byId("outsideEntryInput").value || !byId("outsideExitInput").value || !byId("tieupEntryInput").value || !byId("tieupExitInput").value || [outsideEntry, outsideExit, tieupEntry, tieupExit].some((d) => Number.isNaN(d.getTime()))) {
+          byId("outsideTieupConfirm").textContent = "日時を正しく入力してください。";
+          byId("outsideTieupBody").innerHTML = '<tr><td colspan="2">未計算</td></tr>';
+          return;
+        }
+        if (outsideExit <= outsideEntry || tieupExit <= tieupEntry) {
+          byId("outsideTieupConfirm").textContent = "出庫予定は入庫より後にしてください。";
+          byId("outsideTieupBody").innerHTML = '<tr><td colspan="2">未計算</td></tr>';
+          return;
+        }
+
+        byId("outsideTieupConfirm").textContent = `確認: 外 ${fmt(outsideEntry)}〜${fmt(outsideExit)} / 提携 ${fmt(tieupEntry)}〜${fmt(tieupExit)}`;
+        const rows = [];
+        for (let i = 0; i <= 8; i += 1) {
+          const shiftMin = i * 30;
+          const shiftedOutsideExit = new Date(outsideExit.getTime() + shiftMin * 60000);
+          const shiftedTieupExit = new Date(tieupExit.getTime() + shiftMin * 60000);
+          const outsideFee = calcNormalFee(lotOutside, outsideEntry, shiftedOutsideExit).total;
+          const tieupFee = tieUpFeeForRange(lotTieup, tieupEntry, shiftedTieupExit);
+          const total = outsideFee + tieupFee;
+          const label = shiftMin === 0 ? "+0:00" : `+${Math.floor(shiftMin / 60)}:${pad(shiftMin % 60)}`;
+          rows.push(`<tr><td>${label}</td><td>${yen(total)}</td></tr>`);
+        }
+        byId("outsideTieupBody").innerHTML = rows.join("");
+      }
+      function toggleSakuraPanel() { const lot = getLot(byId("lotSelect").value); byId("sakuraDetails").hidden = !(lot && lot.isSakura); }
+
+      function calcDayFee(minutes, r) { if (minutes <= 0) return 0; if (minutes <= r.firstMinutes) return Math.min(r.firstFee, r.dayMax); return Math.min(r.firstFee + Math.ceil((minutes - r.firstMinutes) / Math.max(1, r.afterMinutes)) * r.afterFee, r.dayMax); }
+      function calcNightFee(minutes, r) { if (minutes <= 0) return 0; return Math.min(Math.ceil(minutes / Math.max(1, r.nightMinutes)) * r.nightFee, r.nightMax); }
+      function calcNormalFee(lot, entry, exit) {
+        const buckets = {}, cur = new Date(entry);
+        while (cur < exit) {
+          const next = new Date(Math.min(cur.getTime() + 60000, exit.getTime()));
+          const type = dayType(cur), r = lot[type], h = cur.getHours() + cur.getMinutes()/60, isDay = h >= r.dayStart && h < r.dayEnd;
+          const k = `${dateKey(cur)}-${type}`;
+          if (!buckets[k]) buckets[k] = { type, day: 0, night: 0 };
+          if (isDay) buckets[k].day += 1; else buckets[k].night += 1;
+          cur.setTime(next.getTime());
+        }
+        let total=0, day=0, night=0;
+        Object.values(buckets).forEach((b) => { const r = lot[b.type]; const df = calcDayFee(b.day, r), nf = calcNightFee(b.night, r); total += df + nf; day += df; night += nf; });
+        return { total, dayFee: day, nightFee: night };
+      }
+      function buildRateSheet(lot, entry, exit) {
+        const isSakuraLot = !!lot.isSakura;
+        const stayDays = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
+        const ticketBase = 1800;
+        const targetAmount = isSakuraLot ? ticketBase * stayDays : null;
+
+        const stepMin = 30;
+        const hardEnd = new Date(entry.getTime() + (isSakuraLot ? 72 : 24) * 60 * 60000);
+
+        const raw = [];
+        let crossing = null;
+        for (let t = new Date(entry.getTime() + stepMin * 60000); t <= hardEnd; t = new Date(t.getTime() + stepMin * 60000)) {
+          const fee = calcNormalFee(lot, entry, t).total;
+          raw.push({ time: new Date(t), fee });
+          if (isSakuraLot && targetAmount !== null && crossing === null && fee >= targetAmount) {
+            crossing = new Date(t);
+            break;
+          }
+        }
+
+        // A4 1枚に収めるため列が多い時は60分間隔へ間引き
+        const fitForPrint = (arr) => {
+          if (arr.length <= 30) return arr;
+          const reduced = arr.filter((_, i) => i % 2 === 0);
+          const last = arr[arr.length - 1];
+          if (!reduced.length || reduced[reduced.length - 1].time.getTime() !== last.time.getTime()) reduced.push(last);
+          return reduced;
+        };
+
+        const display = fitForPrint(raw);
+        let branchIdx = -1;
+        if (crossing) branchIdx = display.findIndex((x) => x.time.getTime() >= crossing.getTime());
+
+        const timeRow = ['<tr><td class="label-cell">出庫時刻</td>'];
+        const recommendRow = ['<tr><td class="label-cell">おすすめ</td>'];
+        const paymentRow = ['<tr><td class="label-cell">支払目安</td>'];
+
+        display.forEach((v, idx) => {
+          const t = `${pad(v.time.getHours())}:${pad(v.time.getMinutes())}`;
+          const c = branchIdx === idx ? 'branch' : '';
+          timeRow.push(`<td class="${c}">${t}</td>`);
+          const recommendTicket = isSakuraLot && targetAmount !== null && v.fee >= targetAmount;
+          let paymentText = yen(v.fee);
+          if (recommendTicket) {
+            const extra = Math.max(0, v.fee - ticketBase);
+            paymentText = extra > 0 ? `${yen(ticketBase)}＋${yen(extra)}` : yen(ticketBase);
+          }
+
+          if (isSakuraLot && targetAmount !== null) {
+            recommendRow.push(`<td class="${c}">${recommendTicket ? '宿泊券購入：あり' : '宿泊券購入：なし'}</td>`);
+            paymentRow.push(`<td class="${c}">${paymentText}</td>`);
+          } else {
+            recommendRow.push(`<td class="${c}">宿泊券購入：なし</td>`);
+            paymentRow.push(`<td class="${c}">${yen(v.fee)}</td>`);
+          }
+        });
+
+        timeRow.push('</tr>');
+        recommendRow.push('</tr>');
+        paymentRow.push('</tr>');
+        byId("sheetBody").innerHTML = `${timeRow.join('')}${recommendRow.join('')}${paymentRow.join('')}`;
+
+        const colsPerPrintBlock = 9;
+        const blockHtml = [];
+        for (let i = 0; i < raw.length; i += colsPerPrintBlock) {
+          const chunk = raw.slice(i, i + colsPerPrintBlock);
+          const r1 = ['<tr><td class="label-cell">出庫時刻</td>'];
+          const r2 = ['<tr><td class="label-cell">おすすめ</td>'];
+          const r3 = ['<tr><td class="label-cell">支払目安</td>'];
+
+          chunk.forEach((v, offset) => {
+            const idx = i + offset;
+            const t = `${pad(v.time.getHours())}:${pad(v.time.getMinutes())}`;
+            const c = branchIdx === idx ? 'branch' : '';
+            const recommendTicket = isSakuraLot && targetAmount !== null && v.fee >= targetAmount;
+            let paymentText = yen(v.fee);
+            if (recommendTicket) {
+              const extra = Math.max(0, v.fee - ticketBase);
+              paymentText = extra > 0 ? `${yen(ticketBase)}＋${yen(extra)}` : yen(ticketBase);
+            }
+            r1.push(`<td class="${c}">${t}</td>`);
+            r2.push(`<td class="${c}">${recommendTicket ? '宿泊券購入：あり' : '宿泊券購入：なし'}</td>`);
+            r3.push(`<td class="${c}">${paymentText}</td>`);
+          });
+
+          r1.push('</tr>');
+          r2.push('</tr>');
+          r3.push('</tr>');
+          blockHtml.push(`<table class="sheet print-sheet"><tbody>${r1.join('')}${r2.join('')}${r3.join('')}</tbody></table>`);
+        }
+        byId("printSheetBlocks").innerHTML = blockHtml.join('');
+
+        byId("sheetDate").textContent = `${entry.getFullYear()}/${pad(entry.getMonth() + 1)}/${pad(entry.getDate())} 入庫`;
+        byId("sheetMeta").textContent = '';
+      }
+
+      function sakuraFreeMinutes() {
+        const shop = Math.max(0, num(byId("shoppingAmount").value)), svc = Math.round(Math.max(0, num(byId("serviceHours").value))*60);
+        const movie = byId("movieUsed").value === "1", card = byId("cardMember").value === "1";
+        const free = { shopping: 0, movie: 0, card: 0 };
+        state.sakuraRules.forEach((r) => {
+          if (r.type === "shopping" && shop >= r.threshold) free.shopping = Math.max(free.shopping, r.freeMinutes);
+          if (r.type === "movie" && movie) free.movie = Math.max(free.movie, r.freeMinutes);
+          if (r.type === "card" && card) free.card = Math.max(free.card, r.freeMinutes);
+        });
+        return { ...free, service: svc, total: free.shopping + free.movie + free.card + svc };
+      }
+
+      function calculate() {
+        const lot = getLot(byId("lotSelect").value), entry = new Date(byId("entryInput").value), exit = new Date(byId("exitInput").value);
+        if (!lot || !byId("entryInput").value || !byId("exitInput").value || Number.isNaN(entry.getTime()) || Number.isNaN(exit.getTime())) { byId("resultPrice").textContent = "—"; byId("resultNote").textContent = "日時を正しく入力してください。"; byId("resultDetailList").innerHTML = ""; byId("resultCard").classList.remove("active"); byId("resultCard").classList.add("pending"); return; }
+        if (exit <= entry) { byId("resultPrice").textContent = "—"; byId("resultNote").textContent = "出庫は入庫より後にしてください。"; byId("resultDetailList").innerHTML = ""; byId("resultCard").classList.remove("active"); byId("resultCard").classList.add("pending"); return; }
+
+        const normal = calcNormalFee(lot, entry, exit);
+        const stayNights = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
+        const sakuraPack = 1800 * stayNights;
+        const passurtPack = 1200 * stayNights;
+
+        const isSakuraLot = !!lot.isSakura;
+        const isPassurtLot = lot.name.includes("パスート24") || lot.id === "lot-2";
+
+        if (isSakuraLot) {
+          const free = sakuraFreeMinutes();
+          const adjEntry = new Date(entry.getTime() + free.total * 60000);
+          const adjusted = adjEntry < exit ? calcNormalFee(lot, adjEntry, exit).total : 0;
+          const cheaper = Math.min(adjusted, sakuraPack);
+          const diff = Math.abs(adjusted - sakuraPack);
+          const better = adjusted <= sakuraPack ? "通常" : "優待";
+          byId("resultPrice").textContent = yen(cheaper);
+          byId("resultDecision").textContent = better === "優待" ? "優待が安い" : "通常が安い";
+          byId("resultDecision").className = `decision ${better === "優待" ? "good" : "bad"}`;
+          byId("resultDiff").textContent = `差額 ${yen(diff)}`;
+          byId("resultDetailList").innerHTML = `<li>通常：${yen(adjusted)}</li><li>優待：${yen(sakuraPack)}（サクラマチ）</li><li>優待：${yen(passurtPack)}（パスート24）</li>`;
+          byId("resultNote").textContent = `サクラマチ熊本駐車場の比較結果`;
+        } else if (isPassurtLot) {
+          const cheaper = Math.min(normal.total, passurtPack);
+          const diff = Math.abs(normal.total - passurtPack);
+          const better = normal.total <= passurtPack ? "通常" : "優待";
+          byId("resultPrice").textContent = yen(cheaper);
+          byId("resultDecision").textContent = better === "優待" ? "優待が安い" : "通常が安い";
+          byId("resultDecision").className = `decision ${better === "優待" ? "good" : "bad"}`;
+          byId("resultDiff").textContent = `差額 ${yen(diff)}`;
+          byId("resultDetailList").innerHTML = `<li>通常：${yen(normal.total)}</li><li>優待：${yen(passurtPack)}（パスート24）</li>`;
+          byId("resultNote").textContent = `パスート24の比較結果`;
+        } else {
+          byId("resultPrice").textContent = yen(normal.total);
+          byId("resultDecision").textContent = "通常が安い";
+          byId("resultDecision").className = "decision bad";
+          byId("resultDiff").textContent = "差額 —";
+          byId("resultDetailList").innerHTML = `<li>通常：${yen(normal.total)}</li><li>優待：—</li>`;
+          byId("resultNote").textContent = `${lot.name}（提携外）`;
+        }
+
+        byId("resultCard").classList.remove("pending");
+        byId("resultCard").classList.add("active");
+        buildRateSheet(lot, entry, exit);
+      }
+
+      function renderRateEditors() {
+        const lot = getLot(byId("settingLotSelect").value); if (!lot) return;
+        ["weekday","weekend","holiday"].forEach((k) => { lot[k].dayStart = num(byId("dayStart").value, lot[k].dayStart); lot[k].dayEnd = num(byId("dayEnd").value, lot[k].dayEnd); });
+        const labels = { weekday:"平日", weekend:"土日", holiday:"祝日" };
+        byId("rateEditors").innerHTML = ["weekday","weekend","holiday"].map((k)=>{const r=lot[k];return `<section class="rate-box"><h4>${labels[k]}</h4><div class="field-grid"><div class="field"><label>入庫後最初(${r.firstMinutes}分)</label><input data-rate="${k}" data-key="firstFee" type="number" min="0" value="${r.firstFee}" /></div><div class="field"><label>以降(${r.afterMinutes}分ごと)</label><input data-rate="${k}" data-key="afterFee" type="number" min="0" value="${r.afterFee}" /></div><div class="field"><label>日中打ち止め</label><input data-rate="${k}" data-key="dayMax" type="number" min="0" value="${r.dayMax}" /></div><div class="field"><label>夜間(${r.nightMinutes}分ごと)</label><input data-rate="${k}" data-key="nightFee" type="number" min="0" value="${r.nightFee}" /></div><div class="field"><label>夜間打ち止め</label><input data-rate="${k}" data-key="nightMax" type="number" min="0" value="${r.nightMax}" /></div></div></section>`}).join("");
+      }
+      function renderRuleEditors() {
+        byId("sakuraRuleEditors").innerHTML = state.sakuraRules.map((r)=>`<section class="rate-box"><div class="field-grid"><div class="field"><label>ルール名</label><input data-rule-id="${r.id}" data-key="label" value="${r.label}" /></div><div class="field"><label>種類</label><select data-rule-id="${r.id}" data-key="type"><option value="shopping" ${r.type==="shopping"?"selected":""}>買い物</option><option value="movie" ${r.type==="movie"?"selected":""}>映画館</option><option value="card" ${r.type==="card"?"selected":""}>カード会員</option></select></div><div class="field"><label>条件値（円 or 1）</label><input data-rule-id="${r.id}" data-key="threshold" type="number" min="0" value="${r.threshold}" /></div><div class="field"><label>無料時間(分)</label><input data-rule-id="${r.id}" data-key="freeMinutes" type="number" min="0" value="${r.freeMinutes}" /></div></div><div class="actions"><button class="btn soft" data-remove-rule="${r.id}" type="button">このルール削除</button></div></section>`).join("");
+      }
+      function renderLotNameEditors() {
+        byId("lotNameEditors").innerHTML = state.lots.map((lot) => `
+          <section class="rate-box">
+            <div class="field-grid" style="grid-template-columns:170px 1fr 150px 150px">
+              <div class="field"><label>ID（変更不可）</label><input value="${lot.id}" disabled /></div>
+              <div class="field"><label>駐車場名</label><input data-lot-id="${lot.id}" data-key="name" value="${lot.name}" /></div>
+              <div class="field"><label>提携時間</label><input data-lot-id="${lot.id}" data-key="tieUpHours" type="number" min="0" value="${lot.tieUpHours ?? 0}" /></div>
+              <div class="field"><label>料金（泊）</label><input data-lot-id="${lot.id}" data-key="tieUpPricePerNight" type="number" min="0" value="${lot.tieUpPricePerNight ?? 0}" /></div>
+            </div>
+          </section>`).join("");
+      }
+      function loadSettingsPanel() { const lot = getLot(byId("settingLotSelect").value); if (!lot) return; byId("dayStart").value = lot.weekday.dayStart; byId("dayEnd").value = lot.weekday.dayEnd; renderRateEditors(); renderRuleEditors(); renderLotNameEditors(); }
+      function saveSettings() {
+        const lot = getLot(byId("settingLotSelect").value); if (!lot) return;
+        const dayStart = Math.max(0, Math.min(23, num(byId("dayStart").value, 8))), dayEnd = Math.max(1, Math.min(24, num(byId("dayEnd").value, 22)));
+        ["weekday","weekend","holiday"].forEach((k)=>{lot[k].dayStart=dayStart;lot[k].dayEnd=dayEnd;});
+        document.querySelectorAll("input[data-rate]").forEach((el)=>{const r=lot[el.dataset.rate];r[el.dataset.key]=Math.max(0,num(el.value,r[el.dataset.key]));});
+        document.querySelectorAll("[data-rule-id]").forEach((el)=>{const rule=state.sakuraRules.find((x)=>x.id===el.dataset.ruleId);if(!rule)return;const key=el.dataset.key;rule[key]=key==="label"||key==="type"?el.value:Math.max(0,num(el.value,rule[key]));});
+        for (const el of document.querySelectorAll("[data-lot-id][data-key='name']")) {
+          const lotItem = state.lots.find((x) => x.id === el.dataset.lotId);
+          if (!lotItem) continue;
+          const name = String(el.value || "").trim();
+          if (!name) { byId("settingsMsg").textContent = "駐車場名は空欄にできません。"; return; }
+          lotItem.name = name;
+        }
+        for (const el of document.querySelectorAll("[data-lot-id][data-key='tieUpHours'], [data-lot-id][data-key='tieUpPricePerNight']")) {
+          const lotItem = state.lots.find((x) => x.id === el.dataset.lotId);
+          if (!lotItem) continue;
+          lotItem[el.dataset.key] = Math.max(0, num(el.value, lotItem[el.dataset.key] || 0));
+          lotItem.tieUpNightsLabel = "泊";
+        }
+        saveState(); byId("settingsMsg").textContent = "設定を保存しました。";
+        fillSelectors();
+      }
+
+      function init() {
+        fillSelectors(); loadSettingsPanel();
+
+        const setPage = (page) => {
+          byId("calcPage").classList.toggle("active", page === "calc");
+          byId("ratePage").classList.toggle("active", page === "rate");
+          byId("goCalcPageBtn").classList.toggle("primary", page === "calc");
+          byId("goCalcPageBtn").classList.toggle("soft", page !== "calc");
+          byId("goRatePageBtn").classList.toggle("primary", page === "rate");
+          byId("goRatePageBtn").classList.toggle("soft", page !== "rate");
+        };
+        byId("goCalcPageBtn").addEventListener("click", ()=>setPage("calc"));
+        byId("goRatePageBtn").addEventListener("click", ()=>setPage("rate"));
+        byId("lotSelect").addEventListener("change", toggleSakuraPanel);
+        byId("calcBtn").addEventListener("click", calculate);
+        byId("outsideTieupCalcBtn").addEventListener("click", calculateOutsideToTieup);
+        byId("clearBtn").addEventListener("click", ()=>{
+          if (!window.confirm("入力をリセットしますか？")) return;
+          byId("entryInput").value="";
+          byId("exitInput").value="";
+          byId("shoppingAmount").value="0";
+          byId("serviceHours").value="0";
+          byId("movieUsed").value="0";
+          byId("cardMember").value="0";
+          byId("resultPrice").textContent="—";
+          byId("resultDecision").textContent="—";
+          byId("resultDecision").className="decision";
+          byId("resultDiff").textContent="差額 —";
+          byId("resultDetailList").innerHTML='';
+          byId("resultNote").textContent="日時を入力してください。";
+          byId("resultCard").classList.remove("active");
+          byId("resultCard").classList.add("pending");
+          byId("sheetBody").innerHTML='<tr><td>おすすめ</td><td>未生成です。</td></tr><tr><td>支払目安</td><td>未生成です。</td></tr>';
+          byId("sheetDate").textContent='--/--';
+          byId("sheetMeta").textContent='';
+          byId("printSheetBlocks").innerHTML='';
+          byId("outsideEntryInput").value="";
+          byId("outsideExitInput").value="";
+          byId("tieupEntryInput").value="";
+          byId("tieupExitInput").value="";
+          byId("outsideTieupConfirm").textContent="日時を入力してください。";
+          byId("outsideTieupBody").innerHTML='<tr><td colspan="2">未計算</td></tr>';
+        });
+        byId("printBtn").addEventListener("click", ()=>window.print());
+        byId("openSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").showModal());
+        byId("closeSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").close());
+        byId("settingLotSelect").addEventListener("change", loadSettingsPanel);
+        byId("dayStart").addEventListener("input", renderRateEditors);
+        byId("dayEnd").addEventListener("input", renderRateEditors);
+        byId("addLotBtn").addEventListener("click", ()=>{state.lots.push({id:`lot-${Date.now()}`,name:"新しい駐車場",isSakura:false,weekday:baseRate(300,100,1000,100,800),weekend:baseRate(400,150,1200,100,800),holiday:baseRate(400,150,1200,100,800)});fillSelectors();byId("settingLotSelect").value=state.lots.at(-1).id;loadSettingsPanel();});
+        byId("addRuleBtn").addEventListener("click", ()=>{state.sakuraRules.push({id:crypto.randomUUID(),label:"新規ルール",type:"shopping",threshold:0,freeMinutes:0});renderRuleEditors();});
+        byId("saveSettingsBtn").addEventListener("click", saveSettings);
+        byId("resetSettingsBtn").addEventListener("click", ()=>{state=clone(defaultState);saveState();fillSelectors();loadSettingsPanel();byId("settingsMsg").textContent="初期値に戻しました。";});
+        byId("sakuraRuleEditors").addEventListener("click", (e)=>{const id=e.target.dataset.removeRule;if(!id)return;state.sakuraRules=state.sakuraRules.filter((r)=>r.id!==id);renderRuleEditors();});
+      }
+      init();
+    </script>
+  </body>
+</html>
