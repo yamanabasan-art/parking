@@ -23,7 +23,7 @@
       .sheet-meta{margin:8px 0;border:1px solid #d9e6ff;background:#f7fbff;border-radius:10px;padding:10px 12px;color:#3b5685}
       .sheet-wrap{overflow-x:auto;border:2px solid #c4d6f6;border-radius:10px}
       table.sheet{width:max-content;min-width:100%;border-collapse:collapse}
-      table.sheet th,table.sheet td{border:1px solid #cfdcf6;padding:8px 10px;text-align:center;white-space:nowrap}
+      table.sheet th,table.sheet td{border:1px solid #cfdcf6;padding:7px 8px;text-align:center;white-space:nowrap}
       table.sheet th{background:#eef4ff;color:#4c6793}
       .branch{background:#fff5c4 !important;color:#7a4b00;font-weight:800}
       .after-branch{background:#e8fff4}
@@ -31,7 +31,7 @@
       dialog{width:min(980px,calc(100% - 18px));border:1px solid #d9e4f8;border-radius:14px;padding:0} dialog::backdrop{background:rgba(8,16,35,.45)}
       .modal-head{padding:12px 14px;border-bottom:1px solid #e3ebf8;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:12px 14px 16px;max-height:76vh;overflow:auto}
       .rate-box{border:1px solid #d7e4f8;border-radius:12px;padding:10px;background:#fbfdff;margin-bottom:10px}.rate-box h4{margin:0 0 8px}
-      @page{size:A4 landscape;margin:8mm}@media print{.hero,.top-nav,.print-hide,#calcPage{display:none!important}#ratePage{display:block!important}body{background:#fff}.wrap{padding:0}.card{box-shadow:none;border:none} table.sheet{font-size:8pt} table.sheet th,table.sheet td{padding:1.8mm 1.2mm}}
+      @page{size:A4 landscape;margin:8mm}@media print{.hero,.top-nav,.print-hide,#calcPage{display:none!important}#ratePage{display:block!important}body{background:#fff}.wrap{padding:0}.card{box-shadow:none;border:none} table.sheet{font-size:7.4pt} table.sheet th,table.sheet td{padding:1.5mm 1.0mm}}
       .top-nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.page{display:none}.page.active{display:block}
       @media (max-width:860px){.field-grid{grid-template-columns:1fr}}
     </style>
@@ -201,43 +201,45 @@
         const stayDays = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
         const targetAmount = isSakuraLot ? 1800 * stayDays : null;
 
-        const samples = [];
-        const start = new Date(entry.getTime() + 30 * 60000);
+        const stepMin = 30;
         const hardEnd = new Date(entry.getTime() + (isSakuraLot ? 72 : 24) * 60 * 60000);
 
-        let crossingIdx = -1;
-        for (let t = new Date(start); t <= hardEnd; t = new Date(t.getTime() + 30 * 60000)) {
-          const normal = calcNormalFee(lot, entry, t).total;
-          samples.push({ time: new Date(t), fee: normal });
-          if (isSakuraLot && targetAmount !== null && crossingIdx < 0 && normal >= targetAmount) {
-            crossingIdx = samples.length - 1;
-            if (samples.length > 2) break;
+        const raw = [];
+        let crossing = null;
+        for (let t = new Date(entry.getTime() + stepMin * 60000); t <= hardEnd; t = new Date(t.getTime() + stepMin * 60000)) {
+          const fee = calcNormalFee(lot, entry, t).total;
+          raw.push({ time: new Date(t), fee });
+          if (isSakuraLot && targetAmount !== null && crossing === null && fee >= targetAmount) {
+            crossing = new Date(t);
+            break;
           }
         }
 
-        let view = samples;
-        if (isSakuraLot && crossingIdx >= 0) {
-          const from = Math.max(0, crossingIdx - 12);
-          const to = Math.min(samples.length - 1, crossingIdx + 12);
-          view = samples.slice(from, to + 1);
-          crossingIdx = crossingIdx - from;
-        } else if (samples.length > 30) {
-          view = samples.slice(0, 30);
-        }
+        // A4 1枚に収めるため列が多い時は60分間隔へ間引き
+        const fitForPrint = (arr) => {
+          if (arr.length <= 30) return arr;
+          const reduced = arr.filter((_, i) => i % 2 === 0);
+          const last = arr[arr.length - 1];
+          if (!reduced.length || reduced[reduced.length - 1].time.getTime() !== last.time.getTime()) reduced.push(last);
+          return reduced;
+        };
+
+        const display = fitForPrint(raw);
+        let branchIdx = -1;
+        if (crossing) branchIdx = display.findIndex((x) => x.time.getTime() >= crossing.getTime());
 
         const timeRow = ['<tr><td class="label-cell">時刻</td>'];
         const feeRow = ['<tr><td class="label-cell">通常料金</td>'];
         const judgeRow = ['<tr><td class="label-cell">判定</td>'];
 
-        view.forEach((v, idx) => {
+        display.forEach((v, idx) => {
           const t = `${pad(v.time.getHours())}:${pad(v.time.getMinutes())}`;
-          const branchClass = crossingIdx === idx ? 'branch' : (crossingIdx >= 0 && idx > crossingIdx ? 'after-branch' : '');
-          timeRow.push(`<td class="${branchClass}">${t}</td>`);
-          feeRow.push(`<td class="${branchClass}">${yen(v.fee)}</td>`);
-
+          const c = branchIdx === idx ? 'branch' : '';
+          timeRow.push(`<td class="${c}">${t}</td>`);
+          feeRow.push(`<td class="${c}">${yen(v.fee)}</td>`);
           if (isSakuraLot && targetAmount !== null) {
             const txt = v.fee < targetAmount ? '通常が安い' : '1800円券が安い';
-            judgeRow.push(`<td class="${branchClass}">${txt}</td>`);
+            judgeRow.push(`<td class="${c}">${txt}</td>`);
           } else {
             judgeRow.push('<td>-</td>');
           }
@@ -249,13 +251,11 @@
         byId("sheetBody").innerHTML = `${timeRow.join('')}${feeRow.join('')}${judgeRow.join('')}`;
 
         byId("sheetDate").textContent = `${entry.getFullYear()}/${pad(entry.getMonth() + 1)}/${pad(entry.getDate())} 入庫`;
-
         if (isSakuraLot && targetAmount !== null) {
-          if (crossingIdx >= 0) {
-            const cross = view[crossingIdx];
-            byId("sheetMeta").textContent = `分岐目安: ${yen(targetAmount)}（1800円 × ${stayDays}泊） / ${pad(cross.time.getHours())}:${pad(cross.time.getMinutes())} 付近で優待券が有利`;
+          if (crossing) {
+            byId("sheetMeta").textContent = `表示範囲: 通常料金が安い時間帯 ～ 分岐時刻 ${pad(crossing.getHours())}:${pad(crossing.getMinutes())}（1800円 × ${stayDays}泊 = ${yen(targetAmount)}）`;
           } else {
-            byId("sheetMeta").textContent = `この範囲では ${yen(targetAmount)}（1800円 × ${stayDays}泊）に到達しません。`;
+            byId("sheetMeta").textContent = `分岐未到達: ${yen(targetAmount)}（1800円 × ${stayDays}泊）まで到達しませんでした。`;
           }
         } else {
           byId("sheetMeta").textContent = `${lot.name}（提携外/参考）`;
