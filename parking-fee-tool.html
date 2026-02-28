@@ -5,171 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KOKO HOTEL Premier 熊本 駐車場料金ツール</title>
     <style>
-      :root {
-        --bg: #f4f8ff;
-        --card: #fff;
-        --line: #d7e3f8;
-        --text: #203252;
-        --muted: #5f769f;
-        --primary: #1f6feb;
-        --good: #03a66f;
-      }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
-        background: linear-gradient(180deg, #edf4ff 0%, var(--bg) 100%);
-        color: var(--text);
-      }
-      .wrap { max-width: 1180px; margin: 0 auto; padding: 18px; }
-      .hero {
-        background: linear-gradient(130deg, #2e7bf2, #5caaff);
-        color: #fff;
-        border-radius: 18px;
-        padding: 20px;
-        box-shadow: 0 10px 24px rgba(32, 84, 166, 0.24);
-      }
-      .hero h1 { margin: 0; font-size: clamp(1.4rem, 2.5vw, 2rem); }
-
-      .card {
-        margin-top: 14px;
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(27, 50, 102, 0.08);
-      }
-      .head { padding: 16px 18px 8px; display: flex; justify-content: space-between; align-items: center; }
-      .head h2 { margin: 0; font-size: 1.25rem; }
-      .body { padding: 12px 18px 18px; }
-
-      .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      .field { display: flex; flex-direction: column; gap: 6px; }
-      .full { grid-column: 1 / -1; }
-      label { color: var(--muted); font-size: 0.94rem; font-weight: 700; }
-      input, select, button { font: inherit; }
-      input, select {
-        width: 100%;
-        border: 1px solid #c6d8f4;
-        border-radius: 11px;
-        padding: 12px;
-        font-size: 1rem;
-      }
-      input:focus, select:focus {
-        outline: none;
-        border-color: #73abff;
-        box-shadow: 0 0 0 3px rgba(115, 171, 255, 0.22);
-      }
-
-      .sakura-panel {
-        border: 1px dashed #bdd2f7;
-        background: #f8fbff;
-        border-radius: 12px;
-        padding: 12px;
-      }
-
-      .actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 12px; }
-      .btn {
-        border: none;
-        border-radius: 11px;
-        padding: 11px 14px;
-        font-weight: 800;
-        cursor: pointer;
-      }
-      .btn.primary { background: var(--primary); color: #fff; }
-      .btn.good { background: var(--good); color: #fff; }
-      .btn.soft { background: #e9f2ff; color: #2f528f; }
-
-      .result {
-        margin-top: 12px;
-        border: 1px solid #d3e4ff;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #eef6ff, #f9fbff);
-        padding: 14px;
-      }
-      .price { font-size: clamp(1.85rem, 3.2vw, 2.45rem); font-weight: 900; color: #1a4ea9; margin: 5px 0; }
-      .muted { color: var(--muted); line-height: 1.65; }
-      .good { color: var(--good); font-weight: 800; }
-
-      .sheet-meta {
-        margin: 8px 0;
-        border: 1px solid #d9e6ff;
-        background: #f7fbff;
-        border-radius: 10px;
-        padding: 10px 12px;
-        color: #3b5685;
-      }
-      table.sheet {
-        width: 100%;
-        border-collapse: collapse;
-        border: 2px solid #c4d6f6;
-      }
-      table.sheet th,
-      table.sheet td {
-        border: 1px solid #cfdcf6;
-        padding: 9px 8px;
-        text-align: left;
-      }
-      table.sheet th {
-        background: #eef4ff;
-        color: #4c6793;
-        font-size: 0.92rem;
-      }
-
-      .floating-settings {
-        position: fixed;
-        right: 16px;
-        top: 16px;
-        z-index: 20;
-      }
-
-      dialog {
-        width: min(980px, calc(100% - 18px));
-        border: 1px solid #d9e4f8;
-        border-radius: 14px;
-        padding: 0;
-      }
-      dialog::backdrop { background: rgba(8, 16, 35, 0.45); }
-      .modal-head { padding: 12px 14px; border-bottom: 1px solid #e3ebf8; display: flex; justify-content: space-between; align-items: center; }
-      .modal-body { padding: 12px 14px 16px; max-height: 76vh; overflow: auto; }
-      .rate-box { border: 1px solid #d7e4f8; border-radius: 12px; padding: 10px; background: #fbfdff; margin-bottom: 10px; }
-      .rate-box h4 { margin: 0 0 8px; }
-
-      @page { size: A4 portrait; margin: 11mm; }
-      @media print {
-        .hero, .floating-settings, .print-hide, #calcCard { display: none !important; }
-        body { background: #fff; }
-        .wrap { padding: 0; }
-        .card { box-shadow: none; border: none; margin-top: 0; }
-      }
-      @media (max-width: 860px) { .field-grid { grid-template-columns: 1fr; } }
+      :root{--bg:#f4f8ff;--card:#fff;--line:#d8e5fa;--text:#223456;--muted:#6078a1;--primary:#1f6feb;--soft:#e8f1ff}
+      *{box-sizing:border-box} body{margin:0;font-family:"Noto Sans JP",sans-serif;background:linear-gradient(180deg,#edf4ff,var(--bg));color:var(--text)}
+      .wrap{max-width:1080px;margin:0 auto;padding:18px}.hero{background:linear-gradient(130deg,#2e7bf2,#5caaff);color:#fff;border-radius:18px;padding:20px;box-shadow:0 10px 24px rgba(31,86,170,.24)}
+      .hero h1{margin:0;font-size:clamp(1.4rem,2.5vw,2rem)}.card{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 20px rgba(25,49,103,.08)}
+      .head{padding:16px 18px 8px;display:flex;justify-content:space-between;align-items:center}.head h2{margin:0;font-size:1.25rem}.body{padding:12px 18px 18px}
+      .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1 / -1}
+      label{font-size:.94rem;color:var(--muted);font-weight:700}input,select,button{font:inherit}input,select{width:100%;border:1px solid #c6d8f4;border-radius:11px;padding:12px;font-size:1rem}
+      input:focus,select:focus{outline:none;border-color:#73abff;box-shadow:0 0 0 3px rgba(115,171,255,.22)}
+      .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.btn{border:none;border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer}
+      .btn.primary{background:var(--primary);color:#fff}.btn.soft{background:var(--soft);color:#2f528f}
+      .btn.calc{padding:10px 18px;min-width:180px;font-size:1rem;line-height:1.1}
+      .result{margin-top:12px;border:1px solid #d3e4ff;border-radius:12px;background:linear-gradient(135deg,#eef6ff,#f9fbff);padding:14px}
+      .price{font-size:clamp(1.85rem,3.2vw,2.45rem);font-weight:900;color:#1a4ea9;margin:5px 0}.muted{color:var(--muted);line-height:1.65}
+      details{border:1px dashed #bfd2f7;border-radius:12px;background:#f8fbff;padding:10px} summary{cursor:pointer;font-weight:800;color:#35558f}
+      dialog{width:min(980px,calc(100% - 18px));border:1px solid #d9e4f8;border-radius:14px;padding:0} dialog::backdrop{background:rgba(8,16,35,.45)}
+      .modal-head{padding:12px 14px;border-bottom:1px solid #e3ebf8;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:12px 14px 16px;max-height:76vh;overflow:auto}
+      .rate-box{border:1px solid #d7e4f8;border-radius:12px;padding:10px;background:#fbfdff;margin-bottom:10px}.rate-box h4{margin:0 0 8px}
+      @media (max-width:860px){.field-grid{grid-template-columns:1fr}}
     </style>
   </head>
   <body>
-    <button id="openSettingsBtn" class="btn primary floating-settings" type="button">料金設定</button>
-
     <main class="wrap">
       <section class="hero"><h1>KOKO HOTEL Premier 熊本 駐車場料金ツール</h1></section>
 
-      <article id="calcCard" class="card">
-        <div class="head"><h2>料金計算</h2></div>
+      <article class="card">
+        <div class="head">
+          <h2>料金計算</h2>
+          <div class="actions" style="margin-top:0"><button id="openSettingsBtn" class="btn soft" type="button">料金設定</button><a href="./parking-rate-sheet.html" class="btn soft" style="text-decoration:none;display:inline-flex;align-items:center">レート表ページ</a></div>
+        </div>
         <div class="body">
           <div class="field-grid">
             <div class="field"><label for="lotSelect">駐車場</label><select id="lotSelect"></select></div>
             <div class="field"><label for="entryInput">入庫日時</label><input id="entryInput" type="datetime-local" /></div>
             <div class="field"><label for="exitInput">出庫日時</label><input id="exitInput" type="datetime-local" /></div>
-            <div class="field"><label>&nbsp;</label><button id="calcBtn" class="btn primary" type="button">料金計算 + レート表生成</button></div>
-
-            <div id="sakuraPanel" class="sakura-panel full" hidden>
-              <div class="field-grid">
-                <div class="field"><label for="shoppingAmount">桜町 買い物金額（円）</label><input id="shoppingAmount" type="number" min="0" value="0" /></div>
-                <div class="field"><label for="serviceHours">サービス券時間（時間）</label><input id="serviceHours" type="number" min="0" step="0.5" value="0" /></div>
-                <div class="field"><label for="movieUsed">TOHOシネマズ利用</label><select id="movieUsed"><option value="0">利用なし</option><option value="1">利用あり</option></select></div>
-                <div class="field"><label for="cardMember">SAKURA MACHIカード会員</label><select id="cardMember"><option value="0">会員でない</option><option value="1">会員</option></select></div>
-              </div>
-            </div>
+            <div class="field"><label>&nbsp;</label><button id="clearBtn" class="btn soft" type="button">クリア</button></div>
           </div>
 
-          <div class="actions print-hide"><button id="clearBtn" class="btn soft" type="button">クリア</button></div>
+          <div class="actions"><button id="calcBtn" class="btn primary calc" type="button">料金計算</button></div>
+
+          <details id="sakuraDetails" class="full" style="margin-top:12px" hidden>
+            <summary>桜町の特典入力を開く（通常は不要）</summary>
+            <div class="field-grid" style="margin-top:10px">
+              <div class="field"><label for="shoppingAmount">桜町 買い物金額（円）</label><input id="shoppingAmount" type="number" min="0" value="0" /></div>
+              <div class="field"><label for="serviceHours">サービス券時間（時間）</label><input id="serviceHours" type="number" min="0" step="0.5" value="0" /></div>
+              <div class="field"><label for="movieUsed">TOHOシネマズ利用</label><select id="movieUsed"><option value="0">利用なし</option><option value="1">利用あり</option></select></div>
+              <div class="field"><label for="cardMember">SAKURA MACHIカード会員</label><select id="cardMember"><option value="0">会員でない</option><option value="1">会員</option></select></div>
+            </div>
+          </details>
 
           <div class="result" aria-live="polite">
             <div class="muted">計算結果</div>
@@ -179,33 +62,16 @@
           </div>
         </div>
       </article>
-
-      <article id="rateCard" class="card">
-        <div class="head">
-          <h2>レート表シート（翌日05:00から12時間）</h2>
-          <button id="printBtn" class="btn good print-hide" type="button">A4で印刷</button>
-        </div>
-        <div class="body">
-          <div id="sheetMeta" class="sheet-meta">料金計算を実行すると、同時にこのシートが更新されます。</div>
-          <table class="sheet">
-            <thead><tr><th>出庫時刻</th><th>通常料金</th></tr></thead>
-            <tbody id="sheetBody"><tr><td colspan="2" class="muted">未生成です。</td></tr></tbody>
-          </table>
-        </div>
-      </article>
     </main>
 
     <dialog id="settingsDialog">
-      <div class="modal-head">
-        <strong>料金設定（枠外パネル）</strong>
-        <button id="closeSettingsBtn" class="btn soft" type="button">閉じる</button>
-      </div>
+      <div class="modal-head"><strong>料金設定</strong><button id="closeSettingsBtn" class="btn soft" type="button">閉じる</button></div>
       <div class="modal-body">
         <div class="field"><label for="settingLotSelect">編集する駐車場</label><select id="settingLotSelect"></select></div>
-        <div class="actions"><button id="addLotBtn" class="btn soft" type="button">+ 駐車場を追加</button></div>
+        <div class="actions"><button id="addLotBtn" class="btn soft" type="button">+ 駐車場追加</button></div>
 
         <div class="rate-box">
-          <h4>日中時間設定（平日/土日/祝 共通）</h4>
+          <h4>日中時間（平日/土日/祝 共通）</h4>
           <div class="field-grid">
             <div class="field"><label for="dayStart">日中開始（時）</label><input id="dayStart" type="number" min="0" max="23" /></div>
             <div class="field"><label for="dayEnd">日中終了（時）</label><input id="dayEnd" type="number" min="1" max="24" /></div>
@@ -215,25 +81,20 @@
         <div id="rateEditors"></div>
 
         <div class="rate-box">
-          <h4>桜町特典ルール（買い物 / 映画館 / カード）</h4>
+          <h4>桜町特典ルール</h4>
           <div id="sakuraRuleEditors"></div>
           <div class="actions"><button id="addRuleBtn" class="btn soft" type="button">+ ルール追加</button></div>
         </div>
 
-        <div class="actions">
-          <button id="saveSettingsBtn" class="btn primary" type="button">設定保存</button>
-          <button id="resetSettingsBtn" class="btn soft" type="button">初期値</button>
-        </div>
+        <div class="actions"><button id="saveSettingsBtn" class="btn primary" type="button">設定保存</button><button id="resetSettingsBtn" class="btn soft" type="button">初期値</button></div>
         <div id="settingsMsg" class="muted"></div>
       </div>
     </dialog>
 
     <script>
-      const STORAGE_KEY = "kokoParkingToolV7";
-      const baseRate = (firstFee, afterFee, dayMax, nightFee, nightMax) => ({
-        firstMinutes: 60, firstFee, afterMinutes: 30, afterFee,
-        dayMax, nightMinutes: 60, nightFee, nightMax, dayStart: 8, dayEnd: 22
-      });
+      const STORAGE_KEY = "kokoParkingToolV8";
+      const LAST_CALC_KEY = "kokoParkingLastCalcV1";
+      const baseRate = (firstFee, afterFee, dayMax, nightFee, nightMax) => ({ firstMinutes: 60, firstFee, afterMinutes: 30, afterFee, dayMax, nightMinutes: 60, nightFee, nightMax, dayStart: 8, dayEnd: 22 });
       const defaultState = {
         hotelSakuraTicket: 1800,
         lots: [
@@ -253,10 +114,10 @@
 
       const byId = (id) => document.getElementById(id);
       const clone = (v) => JSON.parse(JSON.stringify(v));
-      const yen = (v) => new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 }).format(v);
       const num = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
+      const yen = (v) => new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 }).format(v);
       const pad = (v) => String(v).padStart(2, "0");
-      const fmt = (dt) => `${dt.getMonth() + 1}/${dt.getDate()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      const dateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
       function loadState() {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -284,22 +145,15 @@
         add(1, nthWeekdayOfMonth(year,1,1,2)); add(7, nthWeekdayOfMonth(year,7,1,3)); add(9, nthWeekdayOfMonth(year,9,1,3)); add(10, nthWeekdayOfMonth(year,10,1,2));
         return h;
       }
-      const dateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-      const dayType = (d) => {
-        if (holidaySet(d.getFullYear()).has(dateKey(d))) return "holiday";
-        const wd = d.getDay();
-        return wd === 0 || wd === 6 ? "weekend" : "weekday";
-      };
+      const dayType = (d) => holidaySet(d.getFullYear()).has(dateKey(d)) ? "holiday" : (d.getDay()===0||d.getDay()===6 ? "weekend" : "weekday");
 
-      function getLot(id) { return state.lots.find((l) => l.id === id); }
+      const getLot = (id) => state.lots.find((l) => l.id === id);
       function fillSelectors() {
         ["lotSelect", "settingLotSelect"].forEach((id) => {
-          const s = byId(id);
-          const keep = s.value;
+          const s = byId(id), keep = s.value;
           s.innerHTML = "";
           state.lots.forEach((lot) => {
-            const o = document.createElement("option");
-            o.value = lot.id; o.textContent = lot.name; s.appendChild(o);
+            const o = document.createElement("option"); o.value = lot.id; o.textContent = lot.name; s.appendChild(o);
           });
           if (keep) s.value = keep;
         });
@@ -307,50 +161,36 @@
       }
       function toggleSakuraPanel() {
         const lot = getLot(byId("lotSelect").value);
-        byId("sakuraPanel").hidden = !(lot && lot.isSakura);
+        byId("sakuraDetails").hidden = !(lot && lot.isSakura);
       }
 
       function calcDayFee(minutes, r) {
         if (minutes <= 0) return 0;
         if (minutes <= r.firstMinutes) return Math.min(r.firstFee, r.dayMax);
-        const extra = Math.ceil((minutes - r.firstMinutes) / Math.max(1, r.afterMinutes)) * r.afterFee;
-        return Math.min(r.firstFee + extra, r.dayMax);
+        return Math.min(r.firstFee + Math.ceil((minutes - r.firstMinutes) / Math.max(1, r.afterMinutes)) * r.afterFee, r.dayMax);
       }
       function calcNightFee(minutes, r) {
         if (minutes <= 0) return 0;
         return Math.min(Math.ceil(minutes / Math.max(1, r.nightMinutes)) * r.nightFee, r.nightMax);
       }
       function calcNormalFee(lot, entry, exit) {
-        const buckets = {};
-        const cur = new Date(entry);
+        const buckets = {}, cur = new Date(entry);
         while (cur < exit) {
           const next = new Date(Math.min(cur.getTime() + 60000, exit.getTime()));
-          const type = dayType(cur);
-          const r = lot[type];
-          const h = cur.getHours() + cur.getMinutes() / 60;
-          const isDay = h >= r.dayStart && h < r.dayEnd;
-          const key = `${dateKey(cur)}-${type}`;
-          if (!buckets[key]) buckets[key] = { type, day: 0, night: 0 };
-          if (isDay) buckets[key].day += 1; else buckets[key].night += 1;
+          const type = dayType(cur), r = lot[type], h = cur.getHours() + cur.getMinutes()/60, isDay = h >= r.dayStart && h < r.dayEnd;
+          const k = `${dateKey(cur)}-${type}`;
+          if (!buckets[k]) buckets[k] = { type, day: 0, night: 0 };
+          if (isDay) buckets[k].day += 1; else buckets[k].night += 1;
           cur.setTime(next.getTime());
         }
-
-        let total = 0, day = 0, night = 0;
-        Object.values(buckets).forEach((b) => {
-          const r = lot[b.type];
-          const df = calcDayFee(b.day, r);
-          const nf = calcNightFee(b.night, r);
-          total += df + nf; day += df; night += nf;
-        });
+        let total=0, day=0, night=0;
+        Object.values(buckets).forEach((b) => { const r = lot[b.type]; const df = calcDayFee(b.day, r), nf = calcNightFee(b.night, r); total += df + nf; day += df; night += nf; });
         return { total, dayFee: day, nightFee: night };
       }
 
       function sakuraFreeMinutes() {
-        const shop = Math.max(0, num(byId("shoppingAmount").value));
-        const svc = Math.round(Math.max(0, num(byId("serviceHours").value)) * 60);
-        const movie = byId("movieUsed").value === "1";
-        const card = byId("cardMember").value === "1";
-
+        const shop = Math.max(0, num(byId("shoppingAmount").value)), svc = Math.round(Math.max(0, num(byId("serviceHours").value))*60);
+        const movie = byId("movieUsed").value === "1", card = byId("cardMember").value === "1";
         const free = { shopping: 0, movie: 0, card: 0 };
         state.sakuraRules.forEach((r) => {
           if (r.type === "shopping" && shop >= r.threshold) free.shopping = Math.max(free.shopping, r.freeMinutes);
@@ -360,34 +200,12 @@
         return { ...free, service: svc, total: free.shopping + free.movie + free.card + svc };
       }
 
-      function buildRateSheet(lot, entry) {
-        const start = new Date(entry); start.setDate(start.getDate() + 1); start.setHours(5,0,0,0);
-        const end = new Date(start.getTime() + 12 * 60 * 60000);
-        let html = "";
-        for (let t = new Date(start); t <= end; t = new Date(t.getTime() + 30 * 60000)) {
-          html += `<tr><td>${fmt(t)}</td><td>${yen(calcNormalFee(lot, entry, t).total)}</td></tr>`;
-        }
-        byId("sheetBody").innerHTML = html;
-        byId("sheetMeta").textContent = `${lot.name} / 入庫 ${fmt(entry)} / ${fmt(start)}〜${fmt(end)}（30分刻み）`;
-      }
-
-      function calculateAndGenerateSheet() {
-        const lot = getLot(byId("lotSelect").value);
-        const entry = new Date(byId("entryInput").value);
-        const exit = new Date(byId("exitInput").value);
-
+      function calculate() {
+        const lot = getLot(byId("lotSelect").value), entry = new Date(byId("entryInput").value), exit = new Date(byId("exitInput").value);
         if (!lot || !byId("entryInput").value || !byId("exitInput").value || Number.isNaN(entry.getTime()) || Number.isNaN(exit.getTime())) {
-          byId("resultPrice").textContent = "¥0";
-          byId("resultNote").textContent = "日時を正しく入力してください。";
-          byId("resultDetail").textContent = "";
-          return;
+          byId("resultPrice").textContent = "¥0"; byId("resultNote").textContent = "日時を正しく入力してください。"; byId("resultDetail").textContent = ""; return;
         }
-        if (exit <= entry) {
-          byId("resultPrice").textContent = "¥0";
-          byId("resultNote").textContent = "出庫は入庫より後にしてください。";
-          byId("resultDetail").textContent = "";
-          return;
-        }
+        if (exit <= entry) { byId("resultPrice").textContent = "¥0"; byId("resultNote").textContent = "出庫は入庫より後にしてください。"; byId("resultDetail").textContent = ""; return; }
 
         const normal = calcNormalFee(lot, entry, exit);
         if (!lot.isSakura) {
@@ -396,137 +214,59 @@
           byId("resultDetail").textContent = `日中 ${yen(normal.dayFee)} / 夜間 ${yen(normal.nightFee)}`;
         } else {
           const free = sakuraFreeMinutes();
-          const adjEntry = new Date(entry.getTime() + free.total * 60000);
+          const adjEntry = new Date(entry.getTime() + free.total*60000);
           const adjusted = adjEntry < exit ? calcNormalFee(lot, adjEntry, exit).total : 0;
-          const hotel = num(state.hotelSakuraTicket, 1800);
-          const cheaper = Math.min(adjusted, hotel);
-          const diff = Math.abs(adjusted - hotel);
-          const better = adjusted <= hotel ? "通常料金" : "ホテル宿泊券";
-
+          const hotel = num(state.hotelSakuraTicket, 1800), cheaper = Math.min(adjusted, hotel), diff = Math.abs(adjusted - hotel), better = adjusted <= hotel ? "通常料金" : "ホテル宿泊券";
           byId("resultPrice").textContent = yen(cheaper);
-          byId("resultNote").innerHTML = `桜町：<span class="good">${better}が安い</span>（差額 ${yen(diff)}）`;
+          byId("resultNote").innerHTML = `桜町：<span style="color:#03a66f;font-weight:800">${better}が安い</span>（差額 ${yen(diff)}）`;
           byId("resultDetail").textContent = `通常料金(割引後) ${yen(adjusted)} / ホテル宿泊券 ${yen(hotel)} / 買い物 ${free.shopping}分 / 映画 ${free.movie}分 / カード ${free.card}分 / サービス券 ${free.service}分`;
         }
 
-        buildRateSheet(lot, entry);
+        localStorage.setItem(LAST_CALC_KEY, JSON.stringify({ lotId: lot.id, entry: byId("entryInput").value, generatedAt: Date.now() }));
       }
 
       function renderRateEditors() {
-        const lot = getLot(byId("settingLotSelect").value);
-        if (!lot) return;
-        ["weekday", "weekend", "holiday"].forEach((k) => {
-          lot[k].dayStart = num(byId("dayStart").value, lot[k].dayStart);
-          lot[k].dayEnd = num(byId("dayEnd").value, lot[k].dayEnd);
-        });
-        const labels = { weekday: "平日", weekend: "土日", holiday: "祝日" };
-        byId("rateEditors").innerHTML = ["weekday", "weekend", "holiday"].map((k) => {
-          const r = lot[k];
-          return `
-            <section class="rate-box">
-              <h4>${labels[k]}</h4>
-              <div class="field-grid">
-                <div class="field"><label>入庫後最初(${r.firstMinutes}分)</label><input data-rate="${k}" data-key="firstFee" type="number" min="0" value="${r.firstFee}" /></div>
-                <div class="field"><label>以降(${r.afterMinutes}分ごと)</label><input data-rate="${k}" data-key="afterFee" type="number" min="0" value="${r.afterFee}" /></div>
-                <div class="field"><label>日中打ち止め</label><input data-rate="${k}" data-key="dayMax" type="number" min="0" value="${r.dayMax}" /></div>
-                <div class="field"><label>夜間(${r.nightMinutes}分ごと)</label><input data-rate="${k}" data-key="nightFee" type="number" min="0" value="${r.nightFee}" /></div>
-                <div class="field"><label>夜間打ち止め</label><input data-rate="${k}" data-key="nightMax" type="number" min="0" value="${r.nightMax}" /></div>
-              </div>
-            </section>`;
-        }).join("");
+        const lot = getLot(byId("settingLotSelect").value); if (!lot) return;
+        ["weekday","weekend","holiday"].forEach((k) => { lot[k].dayStart = num(byId("dayStart").value, lot[k].dayStart); lot[k].dayEnd = num(byId("dayEnd").value, lot[k].dayEnd); });
+        const labels = { weekday:"平日", weekend:"土日", holiday:"祝日" };
+        byId("rateEditors").innerHTML = ["weekday","weekend","holiday"].map((k)=>{const r=lot[k];return `<section class="rate-box"><h4>${labels[k]}</h4><div class="field-grid"><div class="field"><label>入庫後最初(${r.firstMinutes}分)</label><input data-rate="${k}" data-key="firstFee" type="number" min="0" value="${r.firstFee}" /></div><div class="field"><label>以降(${r.afterMinutes}分ごと)</label><input data-rate="${k}" data-key="afterFee" type="number" min="0" value="${r.afterFee}" /></div><div class="field"><label>日中打ち止め</label><input data-rate="${k}" data-key="dayMax" type="number" min="0" value="${r.dayMax}" /></div><div class="field"><label>夜間(${r.nightMinutes}分ごと)</label><input data-rate="${k}" data-key="nightFee" type="number" min="0" value="${r.nightFee}" /></div><div class="field"><label>夜間打ち止め</label><input data-rate="${k}" data-key="nightMax" type="number" min="0" value="${r.nightMax}" /></div></div></section>`}).join("");
       }
-
       function renderRuleEditors() {
-        byId("sakuraRuleEditors").innerHTML = state.sakuraRules.map((r) => `
-          <section class="rate-box">
-            <div class="field-grid">
-              <div class="field"><label>ルール名</label><input data-rule-id="${r.id}" data-key="label" value="${r.label}" /></div>
-              <div class="field"><label>種類</label><select data-rule-id="${r.id}" data-key="type"><option value="shopping" ${r.type==="shopping"?"selected":""}>買い物</option><option value="movie" ${r.type==="movie"?"selected":""}>映画館</option><option value="card" ${r.type==="card"?"selected":""}>カード会員</option></select></div>
-              <div class="field"><label>条件値（円 or 1）</label><input data-rule-id="${r.id}" data-key="threshold" type="number" min="0" value="${r.threshold}" /></div>
-              <div class="field"><label>無料時間(分)</label><input data-rule-id="${r.id}" data-key="freeMinutes" type="number" min="0" value="${r.freeMinutes}" /></div>
-            </div>
-            <div class="actions"><button class="btn soft" data-remove-rule="${r.id}" type="button">このルール削除</button></div>
-          </section>
-        `).join("");
+        byId("sakuraRuleEditors").innerHTML = state.sakuraRules.map((r)=>`<section class="rate-box"><div class="field-grid"><div class="field"><label>ルール名</label><input data-rule-id="${r.id}" data-key="label" value="${r.label}" /></div><div class="field"><label>種類</label><select data-rule-id="${r.id}" data-key="type"><option value="shopping" ${r.type==="shopping"?"selected":""}>買い物</option><option value="movie" ${r.type==="movie"?"selected":""}>映画館</option><option value="card" ${r.type==="card"?"selected":""}>カード会員</option></select></div><div class="field"><label>条件値（円 or 1）</label><input data-rule-id="${r.id}" data-key="threshold" type="number" min="0" value="${r.threshold}" /></div><div class="field"><label>無料時間(分)</label><input data-rule-id="${r.id}" data-key="freeMinutes" type="number" min="0" value="${r.freeMinutes}" /></div></div><div class="actions"><button class="btn soft" data-remove-rule="${r.id}" type="button">このルール削除</button></div></section>`).join("");
       }
-
       function loadSettingsPanel() {
-        const lot = getLot(byId("settingLotSelect").value);
-        if (!lot) return;
-        byId("dayStart").value = lot.weekday.dayStart;
-        byId("dayEnd").value = lot.weekday.dayEnd;
-        renderRateEditors();
-        renderRuleEditors();
+        const lot = getLot(byId("settingLotSelect").value); if (!lot) return;
+        byId("dayStart").value = lot.weekday.dayStart; byId("dayEnd").value = lot.weekday.dayEnd;
+        renderRateEditors(); renderRuleEditors();
       }
-
       function saveSettings() {
-        const lot = getLot(byId("settingLotSelect").value);
-        if (!lot) return;
-        const dayStart = Math.max(0, Math.min(23, num(byId("dayStart").value, 8)));
-        const dayEnd = Math.max(1, Math.min(24, num(byId("dayEnd").value, 22)));
-        ["weekday", "weekend", "holiday"].forEach((k) => { lot[k].dayStart = dayStart; lot[k].dayEnd = dayEnd; });
-
-        document.querySelectorAll("input[data-rate]").forEach((el) => {
-          const r = lot[el.dataset.rate];
-          r[el.dataset.key] = Math.max(0, num(el.value, r[el.dataset.key]));
-        });
-        document.querySelectorAll("[data-rule-id]").forEach((el) => {
-          const rule = state.sakuraRules.find((x) => x.id === el.dataset.ruleId);
-          if (!rule) return;
-          const key = el.dataset.key;
-          rule[key] = key === "label" || key === "type" ? el.value : Math.max(0, num(el.value, rule[key]));
-        });
-
-        saveState();
-        byId("settingsMsg").textContent = "設定を保存しました。";
+        const lot = getLot(byId("settingLotSelect").value); if (!lot) return;
+        const dayStart = Math.max(0, Math.min(23, num(byId("dayStart").value, 8))), dayEnd = Math.max(1, Math.min(24, num(byId("dayEnd").value, 22)));
+        ["weekday","weekend","holiday"].forEach((k)=>{lot[k].dayStart=dayStart;lot[k].dayEnd=dayEnd;});
+        document.querySelectorAll("input[data-rate]").forEach((el)=>{const r=lot[el.dataset.rate];r[el.dataset.key]=Math.max(0,num(el.value,r[el.dataset.key]));});
+        document.querySelectorAll("[data-rule-id]").forEach((el)=>{const rule=state.sakuraRules.find((x)=>x.id===el.dataset.ruleId);if(!rule)return;const key=el.dataset.key;rule[key]=key==="label"||key==="type"?el.value:Math.max(0,num(el.value,rule[key]));});
+        saveState(); byId("settingsMsg").textContent = "設定を保存しました。";
       }
 
       function init() {
-        fillSelectors();
-        loadSettingsPanel();
-
+        fillSelectors(); loadSettingsPanel();
         byId("lotSelect").addEventListener("change", toggleSakuraPanel);
-        byId("calcBtn").addEventListener("click", calculateAndGenerateSheet);
-        byId("clearBtn").addEventListener("click", () => {
-          byId("entryInput").value = ""; byId("exitInput").value = ""; byId("shoppingAmount").value = "0"; byId("serviceHours").value = "0";
-          byId("movieUsed").value = "0"; byId("cardMember").value = "0";
-          byId("resultPrice").textContent = "¥0"; byId("resultNote").textContent = "日時を入力してください。"; byId("resultDetail").textContent = "";
-          byId("sheetBody").innerHTML = '<tr><td colspan="2" class="muted">未生成です。</td></tr>';
-          byId("sheetMeta").textContent = "料金計算を実行すると、同時にこのシートが更新されます。";
-        });
-        byId("printBtn").addEventListener("click", () => window.print());
+        byId("calcBtn").addEventListener("click", calculate);
+        byId("clearBtn").addEventListener("click", ()=>{byId("entryInput").value="";byId("exitInput").value="";byId("shoppingAmount").value="0";byId("serviceHours").value="0";byId("movieUsed").value="0";byId("cardMember").value="0";byId("resultPrice").textContent="¥0";byId("resultNote").textContent="日時を入力してください。";byId("resultDetail").textContent="";});
+        byId("printBtn").addEventListener("click", ()=>window.print());
 
-        byId("openSettingsBtn").addEventListener("click", () => byId("settingsDialog").showModal());
-        byId("closeSettingsBtn").addEventListener("click", () => byId("settingsDialog").close());
+        byId("openSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").showModal());
+        byId("closeSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").close());
 
         byId("settingLotSelect").addEventListener("change", loadSettingsPanel);
         byId("dayStart").addEventListener("input", renderRateEditors);
         byId("dayEnd").addEventListener("input", renderRateEditors);
-        byId("addLotBtn").addEventListener("click", () => {
-          state.lots.push({ id: `lot-${Date.now()}`, name: "新しい駐車場", isSakura: false, weekday: baseRate(300,100,1000,100,800), weekend: baseRate(400,150,1200,100,800), holiday: baseRate(400,150,1200,100,800) });
-          fillSelectors();
-          byId("settingLotSelect").value = state.lots.at(-1).id;
-          loadSettingsPanel();
-        });
-        byId("addRuleBtn").addEventListener("click", () => {
-          state.sakuraRules.push({ id: crypto.randomUUID(), label: "新規ルール", type: "shopping", threshold: 0, freeMinutes: 0 });
-          renderRuleEditors();
-        });
+        byId("addLotBtn").addEventListener("click", ()=>{state.lots.push({id:`lot-${Date.now()}`,name:"新しい駐車場",isSakura:false,weekday:baseRate(300,100,1000,100,800),weekend:baseRate(400,150,1200,100,800),holiday:baseRate(400,150,1200,100,800)});fillSelectors();byId("settingLotSelect").value=state.lots.at(-1).id;loadSettingsPanel();});
+        byId("addRuleBtn").addEventListener("click", ()=>{state.sakuraRules.push({id:crypto.randomUUID(),label:"新規ルール",type:"shopping",threshold:0,freeMinutes:0});renderRuleEditors();});
         byId("saveSettingsBtn").addEventListener("click", saveSettings);
-        byId("resetSettingsBtn").addEventListener("click", () => {
-          state = clone(defaultState);
-          saveState();
-          fillSelectors();
-          loadSettingsPanel();
-          byId("settingsMsg").textContent = "初期値に戻しました。";
-        });
-        byId("sakuraRuleEditors").addEventListener("click", (e) => {
-          const id = e.target.dataset.removeRule;
-          if (!id) return;
-          state.sakuraRules = state.sakuraRules.filter((r) => r.id !== id);
-          renderRuleEditors();
-        });
+        byId("resetSettingsBtn").addEventListener("click", ()=>{state=clone(defaultState);saveState();fillSelectors();loadSettingsPanel();byId("settingsMsg").textContent="初期値に戻しました。";});
+        byId("sakuraRuleEditors").addEventListener("click", (e)=>{const id=e.target.dataset.removeRule;if(!id)return;state.sakuraRules=state.sakuraRules.filter((r)=>r.id!==id);renderRuleEditors();});
       }
-
       init();
     </script>
   </body>
