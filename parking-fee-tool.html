@@ -7,21 +7,22 @@
     <style>
       :root{--bg:#f4f8ff;--card:#fff;--line:#d8e5fa;--text:#223456;--muted:#6078a1;--primary:#1f6feb;--soft:#e8f1ff;--good:#03a66f}
       *{box-sizing:border-box} body{margin:0;font-family:"Noto Sans JP",sans-serif;background:linear-gradient(180deg,#edf4ff,var(--bg));color:var(--text)}
-      .wrap{max-width:1080px;margin:0 auto;padding:18px}.hero{background:linear-gradient(130deg,#2e7bf2,#5caaff);color:#fff;border-radius:18px;padding:20px;box-shadow:0 10px 24px rgba(31,86,170,.24)}
-      .hero h1{margin:0;font-size:clamp(1.4rem,2.5vw,2rem)}.card{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 20px rgba(25,49,103,.08)}
+      .wrap{max-width:1080px;margin:0 auto;padding:16px}.hero{background:linear-gradient(130deg,#2e7bf2,#5caaff);color:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 4px 10px rgba(31,86,170,.14)}
+      .hero h1{margin:0;font-size:clamp(1.2rem,2.2vw,1.55rem)}.card{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 20px rgba(25,49,103,.08)}
       .head{padding:16px 18px 8px;display:flex;justify-content:space-between;align-items:center}.head h2{margin:0;font-size:1.25rem}.body{padding:12px 18px 18px}
-      .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1 / -1}
+      .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1 / -1}.calc-fields{grid-template-columns:1fr}
       label{font-size:.96rem;color:var(--muted);font-weight:800}input,select,button{font:inherit}input,select{width:100%;border:1px solid #c6d8f4;border-radius:11px;padding:12px;font-size:1rem}
       input:focus,select:focus{outline:none;border-color:#73abff;box-shadow:0 0 0 3px rgba(115,171,255,.22)}
       .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.btn{border:none;border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer}
       .btn.primary{background:var(--primary);color:#fff}.btn.soft{background:var(--soft);color:#2f528f}.btn.good{background:var(--good);color:#fff}
       .btn.calc{padding:10px 18px;min-width:180px;font-size:1rem;line-height:1.1}
-      .dt-wrap{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end}
-      .arrow{font-size:1.5rem;font-weight:900;color:#4f6790;padding-bottom:10px}
       .action-bar{position:sticky;bottom:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:12px;border:1px solid #d4e3fb;border-radius:12px;background:rgba(255,255,255,.96);backdrop-filter:blur(2px)}
       .btn-main{height:48px;min-width:220px;font-size:1.03rem}
       .btn-reset{height:48px;min-width:160px;background:#f3f5f8;color:#3d4e69;border:1px solid #d7dee9}
       .result{margin-top:12px;border:1px solid #d3e4ff;border-radius:12px;background:linear-gradient(135deg,#eef6ff,#f9fbff);padding:14px}
+      .result.pending{border-color:#e2e9f6;background:#fafcff}
+      .result.pending .price{color:#7b8da9}
+      .result.active{border-color:#9bc0ff;box-shadow:0 0 0 3px rgba(115,171,255,.18)}
       .price{font-size:clamp(1.85rem,3.2vw,2.45rem);font-weight:900;color:#1a4ea9;margin:5px 0}.muted{color:var(--muted);line-height:1.65}
       details{border:1px dashed #bfd2f7;border-radius:12px;background:#f8fbff;padding:10px} summary{cursor:pointer;font-weight:800;color:#35558f}
       .sheet-date{font-size:1.35rem;font-weight:900;color:#23457d;margin-bottom:6px}
@@ -38,7 +39,7 @@
       .rate-box{border:1px solid #d7e4f8;border-radius:12px;padding:10px;background:#fbfdff;margin-bottom:10px}.rate-box h4{margin:0 0 8px}
       @page{size:A4 landscape;margin:5mm}@media print{.hero,.top-nav,.print-hide,#calcPage,.screen-only{display:none!important}#ratePage,.print-only{display:block!important}body{background:#fff}.wrap{padding:0 1mm}.card{box-shadow:none;border:none} table.sheet{font-size:6.6pt;table-layout:fixed;width:100%} table.sheet th,table.sheet td{padding:1.1mm .8mm}.print-sheet{margin-bottom:1.5mm;break-inside:avoid-page}}
       .top-nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.page{display:none}.page.active{display:block}
-      @media (max-width:860px){.field-grid{grid-template-columns:1fr}.dt-wrap{grid-template-columns:1fr}.arrow{display:none}.action-bar{flex-direction:column;align-items:stretch}.btn-main,.btn-reset{width:100%}}
+      @media (max-width:860px){.field-grid{grid-template-columns:1fr}.action-bar{flex-direction:column;align-items:stretch}.btn-main,.btn-reset{width:100%}}
     </style>
   </head>
   <body>
@@ -57,15 +58,10 @@
           <div class="actions" style="margin-top:0"><button id="openSettingsBtn" class="btn soft" type="button">料金設定</button></div>
         </div>
         <div class="body">
-          <div class="field-grid">
+          <div class="field-grid calc-fields">
             <div class="field full"><label for="lotSelect">駐車場</label><select id="lotSelect"></select></div>
-            <div class="field full">
-              <div class="dt-wrap">
-                <div class="field"><label for="entryInput">入庫日時</label><input id="entryInput" type="datetime-local" /></div>
-                <div class="arrow" aria-hidden="true">→</div>
-                <div class="field"><label for="exitInput">出庫日時</label><input id="exitInput" type="datetime-local" /></div>
-              </div>
-            </div>
+            <div class="field full"><label for="entryInput">入庫日時</label><input id="entryInput" type="datetime-local" /></div>
+            <div class="field full"><label for="exitInput">出庫日時</label><input id="exitInput" type="datetime-local" /></div>
           </div>
 
           <div class="action-bar print-hide">
@@ -83,9 +79,9 @@
             </div>
           </details>
 
-          <div class="result" aria-live="polite">
+          <div id="resultCard" class="result pending" aria-live="polite">
             <div class="muted">計算結果</div>
-            <div id="resultPrice" class="price">¥0</div>
+            <div id="resultPrice" class="price">—</div>
             <div id="resultNote" class="muted">日時を入力してください。</div>
             <div id="resultDetail" class="muted"></div>
           </div>
@@ -135,6 +131,11 @@
           <div class="actions"><button id="addRuleBtn" class="btn soft" type="button">+ ルール追加</button></div>
         </div>
 
+        <div class="rate-box">
+          <h4>駐車場一覧（表示名編集）</h4>
+          <div id="lotNameEditors"></div>
+        </div>
+
         <div class="actions"><button id="saveSettingsBtn" class="btn primary" type="button">設定保存</button><button id="resetSettingsBtn" class="btn soft" type="button">初期値</button></div>
         <div id="settingsMsg" class="muted"></div>
       </div>
@@ -165,7 +166,7 @@
       const num = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
       const yen = (v) => new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 }).format(v);
       const pad = (v) => String(v).padStart(2, "0");
-      const fmt = (dt) => `${dt.getMonth() + 1}/${dt.getDate()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      const fmt = (dt) => `${dt.getFullYear()}/${pad(dt.getMonth() + 1)}/${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
       const dateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
       function loadState() {
@@ -319,8 +320,8 @@
 
       function calculate() {
         const lot = getLot(byId("lotSelect").value), entry = new Date(byId("entryInput").value), exit = new Date(byId("exitInput").value);
-        if (!lot || !byId("entryInput").value || !byId("exitInput").value || Number.isNaN(entry.getTime()) || Number.isNaN(exit.getTime())) { byId("resultPrice").textContent = "¥0"; byId("resultNote").textContent = "日時を正しく入力してください。"; byId("resultDetail").textContent = ""; return; }
-        if (exit <= entry) { byId("resultPrice").textContent = "¥0"; byId("resultNote").textContent = "出庫は入庫より後にしてください。"; byId("resultDetail").textContent = ""; return; }
+        if (!lot || !byId("entryInput").value || !byId("exitInput").value || Number.isNaN(entry.getTime()) || Number.isNaN(exit.getTime())) { byId("resultPrice").textContent = "—"; byId("resultNote").textContent = "日時を正しく入力してください。"; byId("resultDetail").textContent = ""; byId("resultCard").classList.remove("active"); byId("resultCard").classList.add("pending"); return; }
+        if (exit <= entry) { byId("resultPrice").textContent = "—"; byId("resultNote").textContent = "出庫は入庫より後にしてください。"; byId("resultDetail").textContent = ""; byId("resultCard").classList.remove("active"); byId("resultCard").classList.add("pending"); return; }
 
         const normal = calcNormalFee(lot, entry, exit);
         const stayNights = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
@@ -353,6 +354,8 @@
           byId("resultDetail").textContent = `日中 ${yen(normal.dayFee)} / 夜間 ${yen(normal.nightFee)} / 提携優待比較は対象外`;
         }
 
+        byId("resultCard").classList.remove("pending");
+        byId("resultCard").classList.add("active");
         buildRateSheet(lot, entry, exit);
       }
 
@@ -365,14 +368,31 @@
       function renderRuleEditors() {
         byId("sakuraRuleEditors").innerHTML = state.sakuraRules.map((r)=>`<section class="rate-box"><div class="field-grid"><div class="field"><label>ルール名</label><input data-rule-id="${r.id}" data-key="label" value="${r.label}" /></div><div class="field"><label>種類</label><select data-rule-id="${r.id}" data-key="type"><option value="shopping" ${r.type==="shopping"?"selected":""}>買い物</option><option value="movie" ${r.type==="movie"?"selected":""}>映画館</option><option value="card" ${r.type==="card"?"selected":""}>カード会員</option></select></div><div class="field"><label>条件値（円 or 1）</label><input data-rule-id="${r.id}" data-key="threshold" type="number" min="0" value="${r.threshold}" /></div><div class="field"><label>無料時間(分)</label><input data-rule-id="${r.id}" data-key="freeMinutes" type="number" min="0" value="${r.freeMinutes}" /></div></div><div class="actions"><button class="btn soft" data-remove-rule="${r.id}" type="button">このルール削除</button></div></section>`).join("");
       }
-      function loadSettingsPanel() { const lot = getLot(byId("settingLotSelect").value); if (!lot) return; byId("dayStart").value = lot.weekday.dayStart; byId("dayEnd").value = lot.weekday.dayEnd; renderRateEditors(); renderRuleEditors(); }
+      function renderLotNameEditors() {
+        byId("lotNameEditors").innerHTML = state.lots.map((lot) => `
+          <section class="rate-box">
+            <div class="field-grid" style="grid-template-columns:180px 1fr">
+              <div class="field"><label>ID（変更不可）</label><input value="${lot.id}" disabled /></div>
+              <div class="field"><label>駐車場名</label><input data-lot-id="${lot.id}" data-key="name" value="${lot.name}" /></div>
+            </div>
+          </section>`).join("");
+      }
+      function loadSettingsPanel() { const lot = getLot(byId("settingLotSelect").value); if (!lot) return; byId("dayStart").value = lot.weekday.dayStart; byId("dayEnd").value = lot.weekday.dayEnd; renderRateEditors(); renderRuleEditors(); renderLotNameEditors(); }
       function saveSettings() {
         const lot = getLot(byId("settingLotSelect").value); if (!lot) return;
         const dayStart = Math.max(0, Math.min(23, num(byId("dayStart").value, 8))), dayEnd = Math.max(1, Math.min(24, num(byId("dayEnd").value, 22)));
         ["weekday","weekend","holiday"].forEach((k)=>{lot[k].dayStart=dayStart;lot[k].dayEnd=dayEnd;});
         document.querySelectorAll("input[data-rate]").forEach((el)=>{const r=lot[el.dataset.rate];r[el.dataset.key]=Math.max(0,num(el.value,r[el.dataset.key]));});
         document.querySelectorAll("[data-rule-id]").forEach((el)=>{const rule=state.sakuraRules.find((x)=>x.id===el.dataset.ruleId);if(!rule)return;const key=el.dataset.key;rule[key]=key==="label"||key==="type"?el.value:Math.max(0,num(el.value,rule[key]));});
+        for (const el of document.querySelectorAll("[data-lot-id][data-key='name']")) {
+          const lotItem = state.lots.find((x) => x.id === el.dataset.lotId);
+          if (!lotItem) continue;
+          const name = String(el.value || "").trim();
+          if (!name) { byId("settingsMsg").textContent = "駐車場名は空欄にできません。"; return; }
+          lotItem.name = name;
+        }
         saveState(); byId("settingsMsg").textContent = "設定を保存しました。";
+        fillSelectors();
       }
 
       function init() {
@@ -398,9 +418,11 @@
           byId("serviceHours").value="0";
           byId("movieUsed").value="0";
           byId("cardMember").value="0";
-          byId("resultPrice").textContent="¥0";
+          byId("resultPrice").textContent="—";
           byId("resultNote").textContent="日時を入力してください。";
           byId("resultDetail").textContent="";
+          byId("resultCard").classList.remove("active");
+          byId("resultCard").classList.add("pending");
           byId("sheetBody").innerHTML='<tr><td>おすすめ</td><td>未生成です。</td></tr><tr><td>支払目安</td><td>未生成です。</td></tr>';
           byId("sheetDate").textContent='--/--';
           byId("sheetMeta").textContent='';
