@@ -24,7 +24,7 @@
       dialog{width:min(980px,calc(100% - 18px));border:1px solid #d9e4f8;border-radius:14px;padding:0} dialog::backdrop{background:rgba(8,16,35,.45)}
       .modal-head{padding:12px 14px;border-bottom:1px solid #e3ebf8;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:12px 14px 16px;max-height:76vh;overflow:auto}
       .rate-box{border:1px solid #d7e4f8;border-radius:12px;padding:10px;background:#fbfdff;margin-bottom:10px}.rate-box h4{margin:0 0 8px}
-      @page{size:A4 portrait;margin:11mm}@media print{.hero,.top-nav,.print-hide,#calcPage{display:none!important}#ratePage{display:block!important}body{background:#fff}.wrap{padding:0}.card{box-shadow:none;border:none}}
+      @page{size:A4 landscape;margin:8mm}@media print{.hero,.top-nav,.print-hide,#calcPage{display:none!important}#ratePage{display:block!important}body{background:#fff}.wrap{padding:0}.card{box-shadow:none;border:none} table.sheet{font-size:9pt} table.sheet th,table.sheet td{padding:2.4mm 1.6mm}}
       .top-nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.page{display:none}.page.active{display:block}
       @media (max-width:860px){.field-grid{grid-template-columns:1fr}}
     </style>
@@ -81,7 +81,7 @@
           <button id="printBtn" class="btn good print-hide" type="button">A4で印刷</button>
         </div>
         <div class="body">
-          <div id="sheetMeta" class="sheet-meta">料金計算を実行すると、同時にこのシートが更新されます。</div>
+          <div id="sheetMeta" class="sheet-meta">料金計算を実行すると、このレート表ページが更新されます。</div>
           <table class="sheet">
             <thead><tr><th>出庫時刻</th><th>通常料金</th></tr></thead>
             <tbody id="sheetBody"><tr><td colspan="2">未生成です。</td></tr></tbody>
@@ -187,13 +187,35 @@
         Object.values(buckets).forEach((b) => { const r = lot[b.type]; const df = calcDayFee(b.day, r), nf = calcNightFee(b.night, r); total += df + nf; day += df; night += nf; });
         return { total, dayFee: day, nightFee: night };
       }
-      function buildRateSheet(lot, entry) {
-        const start = new Date(entry); start.setDate(start.getDate() + 1); start.setHours(5,0,0,0);
-        const end = new Date(start.getTime() + 12*60*60000);
+      function buildRateSheet(lot, entry, exit) {
+        const isSakuraLot = lot.name.includes("桜町");
+        const stayDays = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
+        const targetAmount = isSakuraLot ? 1800 * stayDays : null;
+
+        const start = new Date(entry.getTime() + 30 * 60000);
+        const hardEnd = new Date(entry.getTime() + (isSakuraLot ? 72 : 24) * 60 * 60000);
+
         let html = "";
-        for (let t = new Date(start); t <= end; t = new Date(t.getTime() + 30*60000)) html += `<tr><td>${fmt(t)}</td><td>${yen(calcNormalFee(lot, entry, t).total)}</td></tr>`;
-        byId("sheetBody").innerHTML = html;
-        byId("sheetMeta").textContent = `${lot.name} / 入庫 ${fmt(entry)} / ${fmt(start)}〜${fmt(end)}（30分刻み）`;
+        let reachedAt = null;
+        for (let t = new Date(start); t <= hardEnd; t = new Date(t.getTime() + 30 * 60000)) {
+          const normal = calcNormalFee(lot, entry, t).total;
+          html += `<tr><td>${fmt(t)}</td><td>${yen(normal)}</td></tr>`;
+          if (isSakuraLot && targetAmount !== null && normal >= targetAmount) {
+            reachedAt = new Date(t);
+            break;
+          }
+        }
+
+        byId("sheetBody").innerHTML = html || '<tr><td colspan="2">未生成です。</td></tr>';
+
+        if (isSakuraLot && targetAmount !== null) {
+          const info = reachedAt
+            ? `通常料金が ${yen(targetAmount)}（= 1800円 × ${stayDays}泊）に到達する時刻: ${fmt(reachedAt)}`
+            : `通常料金が ${yen(targetAmount)}（= 1800円 × ${stayDays}泊）に到達しませんでした（上限 ${fmt(hardEnd)} まで）`;
+          byId("sheetMeta").textContent = `${lot.name} / 入庫 ${fmt(entry)} / ${info}`;
+        } else {
+          byId("sheetMeta").textContent = `${lot.name} / 入庫 ${fmt(entry)} / 24時間分（30分刻み）`;
+        }
       }
 
       function sakuraFreeMinutes() {
@@ -214,18 +236,37 @@
         if (exit <= entry) { byId("resultPrice").textContent = "¥0"; byId("resultNote").textContent = "出庫は入庫より後にしてください。"; byId("resultDetail").textContent = ""; return; }
 
         const normal = calcNormalFee(lot, entry, exit);
-        if (!lot.isSakura) { byId("resultPrice").textContent = yen(normal.total); byId("resultNote").textContent = `${lot.name} の通常料金`; byId("resultDetail").textContent = `日中 ${yen(normal.dayFee)} / 夜間 ${yen(normal.nightFee)}`; }
-        else {
+        const stayNights = Math.max(1, Math.ceil((exit - entry) / (24 * 60 * 60 * 1000)));
+        const sakuraPack = 1800 * stayNights;
+        const passurtPack = 1200 * stayNights;
+
+        const isSakuraLot = lot.name.includes("桜町");
+        const isPassurtLot = lot.name.includes("Passurt24");
+
+        if (isSakuraLot) {
           const free = sakuraFreeMinutes();
-          const adjEntry = new Date(entry.getTime() + free.total*60000);
+          const adjEntry = new Date(entry.getTime() + free.total * 60000);
           const adjusted = adjEntry < exit ? calcNormalFee(lot, adjEntry, exit).total : 0;
-          const hotel = num(state.hotelSakuraTicket, 1800), cheaper = Math.min(adjusted, hotel), diff = Math.abs(adjusted - hotel), better = adjusted <= hotel ? "通常料金" : "ホテル宿泊券";
+          const cheaper = Math.min(adjusted, sakuraPack);
+          const diff = Math.abs(adjusted - sakuraPack);
+          const better = adjusted <= sakuraPack ? "通常料金" : "桜町優待料金";
           byId("resultPrice").textContent = yen(cheaper);
           byId("resultNote").innerHTML = `桜町：<span style="color:#03a66f;font-weight:800">${better}が安い</span>（差額 ${yen(diff)}）`;
-          byId("resultDetail").textContent = `通常料金(割引後) ${yen(adjusted)} / ホテル宿泊券 ${yen(hotel)} / 買い物 ${free.shopping}分 / 映画 ${free.movie}分 / カード ${free.card}分 / サービス券 ${free.service}分`;
+          byId("resultDetail").textContent = `通常料金(割引後) ${yen(adjusted)} / 桜町優待 ${yen(sakuraPack)}（1800円×${stayNights}泊） / パスート24優待 ${yen(passurtPack)}（1200円×${stayNights}泊） / 買い物 ${free.shopping}分 / 映画 ${free.movie}分 / カード ${free.card}分 / サービス券 ${free.service}分`;
+        } else if (isPassurtLot) {
+          const cheaper = Math.min(normal.total, passurtPack);
+          const diff = Math.abs(normal.total - passurtPack);
+          const better = normal.total <= passurtPack ? "通常料金" : "パスート24優待料金";
+          byId("resultPrice").textContent = yen(cheaper);
+          byId("resultNote").innerHTML = `Passurt24：<span style="color:#03a66f;font-weight:800">${better}が安い</span>（差額 ${yen(diff)}）`;
+          byId("resultDetail").textContent = `通常料金 ${yen(normal.total)} / パスート24優待 ${yen(passurtPack)}（1200円×${stayNights}泊） / 桜町優待 ${yen(sakuraPack)}（1800円×${stayNights}泊）`;
+        } else {
+          byId("resultPrice").textContent = yen(normal.total);
+          byId("resultNote").textContent = `${lot.name} の通常料金（提携外）`;
+          byId("resultDetail").textContent = `日中 ${yen(normal.dayFee)} / 夜間 ${yen(normal.nightFee)} / 提携優待比較は対象外`;
         }
-        buildRateSheet(lot, entry);
-        byId("goRatePageBtn").click();
+
+        buildRateSheet(lot, entry, exit);
       }
 
       function renderRateEditors() {
@@ -262,7 +303,7 @@
         byId("goRatePageBtn").addEventListener("click", ()=>setPage("rate"));
         byId("lotSelect").addEventListener("change", toggleSakuraPanel);
         byId("calcBtn").addEventListener("click", calculate);
-        byId("clearBtn").addEventListener("click", ()=>{byId("entryInput").value="";byId("exitInput").value="";byId("shoppingAmount").value="0";byId("serviceHours").value="0";byId("movieUsed").value="0";byId("cardMember").value="0";byId("resultPrice").textContent="¥0";byId("resultNote").textContent="日時を入力してください。";byId("resultDetail").textContent="";byId("sheetBody").innerHTML='<tr><td colspan="2">未生成です。</td></tr>';byId("sheetMeta").textContent='料金計算を実行すると、同時にこのシートが更新されます。';});
+        byId("clearBtn").addEventListener("click", ()=>{byId("entryInput").value="";byId("exitInput").value="";byId("shoppingAmount").value="0";byId("serviceHours").value="0";byId("movieUsed").value="0";byId("cardMember").value="0";byId("resultPrice").textContent="¥0";byId("resultNote").textContent="日時を入力してください。";byId("resultDetail").textContent="";byId("sheetBody").innerHTML='<tr><td colspan="2">未生成です。</td></tr>';byId("sheetMeta").textContent='料金計算を実行すると、このレート表ページが更新されます。';});
         byId("printBtn").addEventListener("click", ()=>window.print());
         byId("openSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").showModal());
         byId("closeSettingsBtn").addEventListener("click", ()=>byId("settingsDialog").close());
